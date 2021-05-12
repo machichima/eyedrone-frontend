@@ -1,0 +1,134 @@
+body {
+    margin: 0;
+}
+/* Nevigator bar */
+header{
+    box-sizing: border-box;
+    background-color: #52616B;
+    width: 100vw;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 0 0 52px;
+}
+header h1 {
+    color: #fff;
+    font-size: 35px;
+}
+header button {
+    background-color: #F0F5F9;
+    position: absolute;
+    right: 50px;
+	width: 120px;
+    height: 32px;
+    border-radius: 10px;
+    border: 0px;
+    font-size: 20px;
+}
+/* ------------------------------------------ */
+/* NewModule */
+.fill-in-data-title {
+    text-align: center;
+}
+.model-name-form {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    margin: 10px auto;
+    width: 70%;
+}
+#model-name {
+    margin: 0 0 0 10px;
+    border-radius: 10px;
+}
+.previous-grouop {
+    display: block;
+    margin: 10px auto;
+    width: 70%;
+    height: 25px;
+    border-radius: 10px;
+    background-color: #52616B;
+    color: #fff;
+    box-sizing: border-box;
+    padding: 0px 20px;
+}
+.delete-prev-pic-icon {
+    margin-right: 30px;
+}
+#upload-img-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    width: 70%;
+    border: #52616B solid 2px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 5px 0 5px 10px;
+    margin: 0 auto 0 auto;
+    
+}
+#upload-img-container p {
+    /* display: inline; */
+    width: 60vw;
+    /* height: 2vw; */
+    margin:0px;
+    border: black 2px solid;
+    /* overflow-wrap: break-word; */
+    text-overflow: ellipsis;
+    /* white-space: normal;
+    overflow: hidden; */
+}
+
+#upload-img::file-selector-button {
+    background-color: #52616B;
+    color: #fff;
+    border-radius: 10px;
+    margin: 0 20px 0 0;
+}
+.image-container {
+    position: relative; 
+    display: block;
+    box-sizing: border-box;
+    margin: 20px auto;
+    width: 70vw;
+    /* height: 70vh; */
+    justify-content: center;
+}
+
+.tif-canvas {
+    max-width: 100%;
+    display: inline-block;
+}
+.spot {
+    position: absolute;
+    left: 10px;
+    top: 50px;
+    background-color: blueviolet;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+p {
+    font-size: 20px;
+    margin: 20px;
+}
+.button {
+    float: right;
+    background-color: #52616B;
+    color: #fff;
+    border-radius: 10px;
+    margin: 20px 0 50px 0;
+}
+.handle-table {
+    width: 80vw;
+    margin: 0px auto 50px auto;
+}
+.input-data {
+    border: 0px solid;
+    border-bottom: 2px solid #52616B;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* ------------------------------------------- */
