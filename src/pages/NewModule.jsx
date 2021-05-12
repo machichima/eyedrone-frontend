@@ -40,10 +40,13 @@ function NewModule() {
         //Step 1:取得state數據
         const product = modelName;
         //Step 2:新增到JSON-Server數據庫中 
-        axios.post("/api/models/", { name: modelName }).then((res) => {
+        try {
+            const res = await axios.post("/api/models/", { name: modelName });
             console.log(res.data);
             changeModelId(res.data.id);
-        });
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     const postImg = async (groupNum) => {    //post multiple image to backend
@@ -64,10 +67,14 @@ function NewModule() {
                 'content-type': 'multipart/form-data'
             }
         }
-        const res = await axios.post("/api/images/", param, config).then((res) => {
+        try {
+            const res = await axios.post("/api/images/", param, config);
             console.log(res.data);
             changeImageId([...imageId, res.data.id]);
-        });
+        } catch (e) {
+            console.log(e)
+        }
+
     }
 
     function pointSpot(e) {     //當點擊圖片時取得滑鼠的點(滑鼠在圖片上的座標點，在圖片坐標系)
@@ -157,19 +164,19 @@ function NewModule() {
         //imageId.length
         console.log(totalGroup);
         let infoList = [];
-        for (let i = 0; i < axis.length-1; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
+        for (let i = 0; i < axis.length - 1; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
             let infoPrompt = new Map();
             infoPrompt = infoOfPoints[i];
-            infoPrompt['image'] = imageId[infoPrompt.group-1];
+            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，所以直接從inageId開始
             delete infoPrompt.id;
             delete infoPrompt.group;
             console.log(infoPrompt);
             infoList.push(infoPrompt);
-            //axios.put(`/api/images/${imageId}`, {points: infoPrompt});
+            //axios.put(`/api/images/${imageId}/`, {points: infoPrompt});
         }
         console.log(infoList);
-        console.log({name: modelName, points: infoList});
-        axios.put(`/api/models/${modelId}`, {name: modelName, points: infoList}).catch((e)=>console.log(e));
+        console.log({ name: modelName, points: infoList });
+        axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList }).catch((e) => console.log(e));
     }
 
     return <div>
