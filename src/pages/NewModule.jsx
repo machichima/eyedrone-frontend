@@ -51,8 +51,6 @@ function NewModule() {
 
     const postImg = async (groupNum) => {    //post multiple image to backend
         //Step 1:取得state數據
-        console.log('+++++++++++++++++++++');
-        console.log(modelId);
         //Step 2:新增到JSON-Server數據庫中 
         let param = new FormData();  // 创建form对象
         param.append('model', modelId);  // 通过append向form对象添加数据
@@ -93,6 +91,19 @@ function NewModule() {
             //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
             alert("請點選座標點");
             return;
+        }
+        if(totalGroup + 1 != fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
+            //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
+            // 1 => 2， totalGroup + 1 = 2 fileName[0],fileName[fileName.length-1] for i=0; i < totalGroup
+            console.log('in');
+            let fileNamePrompt = [];
+            for(let i = 0; i < totalGroup; i++) {
+                fileNamePrompt.push(fileName[i]);
+            }
+            fileNamePrompt.push(fileName[fileName.length-1]);
+            changeFileName(fileNamePrompt);
+            console.log('+++++++++++++++++++++++++++++++++++++');
+            console.log(fileNamePrompt);
         }
         if (axis[axis.length - 1].group === null && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
             //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
@@ -243,7 +254,6 @@ function NewModule() {
                     // names must be equal
                     return 0;
                 }));    //改變fileName的數值
-                console.log(fileName[0]);
 
             }} multiple />
             {/* ref用來讓button操作input時有依據 */}
