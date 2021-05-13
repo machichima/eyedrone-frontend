@@ -6,10 +6,8 @@ import TableRow from '../components/TableRow';
 import axios from "../components/axios";
 // import axios from "axios"
 import FormData from 'form-data';
-import ConvertTiff from 'tiff-to-png';
 import Tiff from 'tiff.js'
 import Table from 'react-bootstrap/Table'
-var fs = require('fs');
 
 function NewModule() {
     //var fileName = [];
@@ -32,13 +30,33 @@ function NewModule() {
     // };
     //to here
 
+
+    React.useEffect(() => {
+        function handleResize() {
+            console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
+            let axisPrompt = axis;
+            let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
+            let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
+            for (let i = 0; i < axis.lengthl; i++) {
+                let [xShow, yShow] = [Math.round(axis[i].x / canvasDim.width * currentW), Math.round(axis[i].y / canvasDim.height * currentH)]
+                axisPrompt[i].xShow = xShow;
+                axisPrompt[i].yShow = yShow;
+            }
+            changeAxis(axisPrompt);
+
+        }
+
+        window.addEventListener('resize', handleResize)
+    })
+
+
+
     function handleModelName(e) {
         changeModelName(e.target.value);
     }
 
     const postModel = async () => {    //post model name
         //Step 1:取得state數據
-        const product = modelName;
         //Step 2:新增到JSON-Server數據庫中 
         try {
             const res = await axios.post("/api/models/", { name: modelName });
@@ -53,15 +71,15 @@ function NewModule() {
         //Step 1:取得state數據
         //Step 2:新增到JSON-Server數據庫中 
         console.log('----------------------------------');
-        console.log(fileName[fileName.length-1]);
+        console.log(fileName[fileName.length - 1]);
         let param = new FormData();  // 创建form对象
         param.append('model', modelId);  // 通过append向form对象添加数据
-        param.append('is_panel', (groupNum == 0) ? true : false);
-        param.append('blue', fileName[fileName.length-1][0]);
-        param.append('green', fileName[fileName.length-1][1]);
-        param.append('red', fileName[fileName.length-1][2]);
-        param.append('red_edge', fileName[fileName.length-1][3]);
-        param.append('red_nir', fileName[fileName.length-1][4]);
+        param.append('is_panel', (groupNum === 0) ? true : false);
+        param.append('blue', fileName[fileName.length - 1][0]);
+        param.append('green', fileName[fileName.length - 1][1]);
+        param.append('red', fileName[fileName.length - 1][2]);
+        param.append('red_edge', fileName[fileName.length - 1][3]);
+        param.append('red_nir', fileName[fileName.length - 1][4]);
         const config = {
             headers: {
                 'content-type': 'multipart/form-data'
@@ -81,7 +99,7 @@ function NewModule() {
         let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
         let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
         let [x, y] = [Math.round(e.nativeEvent.offsetX / currentW * canvasDim.width), Math.round(e.nativeEvent.offsetY / currentH * canvasDim.height)];
-        let [xShow, yShow] = [e.nativeEvent.offsetX, e.nativeEvent.offsetY];
+        let [xShow, yShow] = [e.nativeEvent.offsetX / currentW, e.nativeEvent.offsetY / currentH];
         changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
         console.log(x, y);
         console.log(xShow, yShow);
@@ -94,13 +112,13 @@ function NewModule() {
             alert("請點選座標點");
             return;
         }
-        if(totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
+        if (totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
             //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
             let fileNamePrompt = [];
-            for(let i = 0; i < totalGroup; i++) {
+            for (let i = 0; i < totalGroup; i++) {
                 fileNamePrompt.push(fileName[i]);
             }
-            fileNamePrompt.push(fileName[fileName.length-1]);
+            fileNamePrompt.push(fileName[fileName.length - 1]);
             changeFileName(fileNamePrompt);
             console.log('+++++++++++++++++++++++++++++++++++++');
             console.log(fileNamePrompt);
@@ -153,7 +171,7 @@ function NewModule() {
     }
 
     function uploadFile(event) {
-        if (event.target.files.length != 5) {
+        if (event.target.files.length !== 5) {
             alert('請上傳五張圖片');
             return;
         }
@@ -165,7 +183,6 @@ function NewModule() {
             // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
             fileNameTemp.push(event.target.files[i]);
             if (i === 0) {
-                var input = file[0];
                 var reader = new FileReader();
 
                 reader.onload = function (e) {
@@ -205,12 +222,14 @@ function NewModule() {
     function handlePointsInfo(info) {
         console.log(info);
         if (infoOfPoints.length + 1 === info.group || info.id > infoOfPoints[infoOfPoints.length - 1].id) {
+            //該點的資訊未被輸入過
             console.log('true');
             changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
             return;
         }
         let infoPrompt = infoOfPoints;
         for (let i = 0; i < infoPrompt.length; i++) {
+            //該點的資訊曾被輸入過，更新該點的其他檢測物資訊
             if (infoPrompt[i].id === info.id) {
                 infoPrompt[i] = { ...infoOfPoints[i], [info.name]: parseInt(info.value) };
             }
@@ -228,7 +247,7 @@ function NewModule() {
         for (let i = 0; i < axis.length - 1; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
             let infoPrompt = new Map();
             infoPrompt = infoOfPoints[i];
-            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，所以直接從inageId開始
+            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，所以直接從imageId開始
             delete infoPrompt.id;
             delete infoPrompt.group;
             console.log(infoPrompt);
@@ -247,14 +266,14 @@ function NewModule() {
         <form className="model-name-form" >
             <label>名稱: </label>
             <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName}></input>
-            <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={postModel}>送出</button>
+            <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button>
         </form>
 
         {Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 ?
             <PrevPic key={index} group={index} onClick={showPrevPic} /> :
             null)}
         {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
-        <form id="upload-img-container">   {/* */}
+        <form id="upload-img-container" style={{ display: modelId !== 0 ? "block" : "none" }}>   {/* */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
             {/* <p>{fileName.toString()}</p> */}
             <input id="upload-img" type="file" onChange={uploadFile} multiple />
@@ -263,12 +282,13 @@ function NewModule() {
 
         <div className="image-container" >
             <canvas className='tif-canvas' ref={canvasRef} width={canvasDim.width} height={canvasDim.height}
-                onClick={group != 0 ? pointSpot : null} style={{ display: showCanvas ? "block" : "none" }} />
+                style={{ display: showCanvas ? 'block' : "none" }}
+                onClick={group !== 0 ? pointSpot : null} />
             {axis.map((val, index) => index > 0 && val.group === group ? (<Spot key={index} axisX={val.xShow} axisY={val.yShow} show={showCanvas} />) : null)}
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
-            <button className='button' style={{ display: showCanvas && canvasDim.height != 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
+            <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <div className="handle-table">
+        <div className="handle-table" style={{ display: modelId !== 0 ? "block" : "none" }}>
             <Table striped bordered hover>
                 <thead>
                     <tr>
@@ -280,7 +300,7 @@ function NewModule() {
                     </tr>
                 </thead>
                 <tbody>
-                    {axis.map((val, index) => val.group != null ?
+                    {axis.map((val, index) => val.group !== null ?
                         <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} onChange={handlePointsInfo} /> :
                         null)}
                 </tbody>

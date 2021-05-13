@@ -1,37 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip'
 
 function TableRow(props) {
-    //const [singlePointInfo, chSinglePointInfo] = useState({ do: '', bod: '', ss: '', nh3n: '' });
 
     function handleInfoOfPoints(e) {
         console.log(e.target.value);
         console.log(e.target.name);
         props.onChange({id: props.id,value: e.target.value, name: e.target.name, x: props.spot.x, y: props.spot.y, group: props.spot.group});
-        // const { name, value } = e.target;
-        // chSinglePointInfo(prevValue => {
-        //     if (name === 'do') {
-        //         return {
-        //             do: value, bod: prevValue.bod, ss: prevValue.ss, nh3n: prevValue.nh3n,
-        //         }
-        //     }
-        //     if (name === 'bod') {
-        //         return {
-        //             do: prevValue.do, bod: value, ss: prevValue.ss, nh3n: prevValue.nh3n,
-        //         }
-        //     }
-        //     if (name === 'ss') {
-        //         return {
-        //             do: prevValue.do, bod: prevValue.bod, ss: value, nh3n: prevValue.nh3n,
-        //         }
-        //     }
-        //     if (name === 'nh3n') {
-        //         return {
-        //             do: prevValue.do, bod: prevValue.bod, ss: prevValue.ss, nh3n: value,
-        //         }
-        //     }
-        // });
     }
 
     console.log(props.spot.group);
