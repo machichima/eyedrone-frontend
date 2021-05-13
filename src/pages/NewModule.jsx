@@ -52,14 +52,16 @@ function NewModule() {
     const postImg = async (groupNum) => {    //post multiple image to backend
         //Step 1:取得state數據
         //Step 2:新增到JSON-Server數據庫中 
+        console.log('----------------------------------');
+        console.log(fileName[fileName.length-1]);
         let param = new FormData();  // 创建form对象
         param.append('model', modelId);  // 通过append向form对象添加数据
         param.append('is_panel', (groupNum == 0) ? true : false);
-        param.append('blue', fileName[groupNum][0]);
-        param.append('green', fileName[groupNum][1]);
-        param.append('red', fileName[groupNum][2]);
-        param.append('red_edge', fileName[groupNum][3]);
-        param.append('red_nir', fileName[groupNum][4]);
+        param.append('blue', fileName[fileName.length-1][0]);
+        param.append('green', fileName[fileName.length-1][1]);
+        param.append('red', fileName[fileName.length-1][2]);
+        param.append('red_edge', fileName[fileName.length-1][3]);
+        param.append('red_nir', fileName[fileName.length-1][4]);
         const config = {
             headers: {
                 'content-type': 'multipart/form-data'
@@ -92,10 +94,8 @@ function NewModule() {
             alert("請點選座標點");
             return;
         }
-        if(totalGroup + 1 != fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
+        if(totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
             //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
-            // 1 => 2， totalGroup + 1 = 2 fileName[0],fileName[fileName.length-1] for i=0; i < totalGroup
-            console.log('in');
             let fileNamePrompt = [];
             for(let i = 0; i < totalGroup; i++) {
                 fileNamePrompt.push(fileName[i]);
@@ -150,6 +150,56 @@ function NewModule() {
         };
         reader.readAsArrayBuffer(file);
         changeShowCanvas(true);
+    }
+
+    function uploadFile(event) {
+        if (event.target.files.length != 5) {
+            alert('請上傳五張圖片');
+            return;
+        }
+        let fileNameTemp = [];   //先將fileName內的都清空
+        for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
+            let file = event.target.files[i];
+            console.log(window.URL.createObjectURL(file));
+            console.log(file.name);
+            // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
+            fileNameTemp.push(event.target.files[i]);
+            if (i === 0) {
+                var input = file[0];
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    var buffer = e.target.result;
+                    console.log('--------------------------------------');
+                    console.log(buffer);
+                    var tiff = new Tiff({ buffer: buffer });
+                    var canvas = tiff.toCanvas();
+                    if (canvas) {
+                        //document.querySelector('#output').append(canvas);
+                        const [width, height] = [canvas.width, canvas.height]
+                        changeCanvasDim({ width, height });
+                        var canvasTemp = canvasRef.current;
+                        const context = canvasTemp.getContext('2d');
+                        context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+                    }
+                    // The file's text will be printed here
+                };
+                reader.readAsArrayBuffer(file);
+                changeShowCanvas(true);
+            }
+        }
+        changeFileName([...fileName, fileNameTemp].sort((a, b) => {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+        }));    //改變fileName的數值
+
     }
 
     function handlePointsInfo(info) {
@@ -207,55 +257,7 @@ function NewModule() {
         <form id="upload-img-container">   {/* */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
             {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={(event) => {
-                if (event.target.files.length != 5) {
-                    alert('請上傳五張圖片');
-                    return;
-                }
-                let fileNameTemp = [];   //先將fileName內的都清空
-                for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
-                    let file = event.target.files[i];
-                    console.log(window.URL.createObjectURL(file));
-                    console.log(file.name);
-                    // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
-                    fileNameTemp.push(event.target.files[i]);
-                    if (i === 0) {
-                        var input = file[0];
-                        var reader = new FileReader();
-
-                        reader.onload = function (e) {
-                            var buffer = e.target.result;
-                            console.log('--------------------------------------');
-                            console.log(buffer);
-                            var tiff = new Tiff({ buffer: buffer });
-                            var canvas = tiff.toCanvas();
-                            if (canvas) {
-                                //document.querySelector('#output').append(canvas);
-                                const [width, height] = [canvas.width, canvas.height]
-                                changeCanvasDim({ width, height });
-                                var canvasTemp = canvasRef.current;
-                                const context = canvasTemp.getContext('2d');
-                                context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-                            }
-                            // The file's text will be printed here
-                        };
-                        reader.readAsArrayBuffer(file);
-                        changeShowCanvas(true);
-                    }
-                }
-                changeFileName([...fileName, fileNameTemp].sort((a, b) => {
-                    if (a.name < b.name) {
-                        return -1;
-                    }
-                    if (a.name > b.name) {
-                        return 1;
-                    }
-
-                    // names must be equal
-                    return 0;
-                }));    //改變fileName的數值
-
-            }} multiple />
+            <input id="upload-img" type="file" onChange={uploadFile} multiple />
             {/* ref用來讓button操作input時有依據 */}
         </form>
 
