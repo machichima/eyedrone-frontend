@@ -27,8 +27,9 @@ header button {
 }
 /* ------------------------------------------ */
 /* NewModule */
-.fill-in-data-title {
+.big-title {
     text-align: center;
+    margin-top: 50px;
 }
 .model-name-form {
     display: flex;
@@ -132,3 +133,20 @@ p {
 }
 
 /* ------------------------------------------- */
+/* AllModuleAndPredict */
+.card-for-all-module-and-predict {
+    width: 50vw;
+    background-color: #c9d6df;
+    margin: 0px auto;
+    border: 2px solid #c9d6df;
+    border-radius: 10px;
+}
+.model-name {
+    margin: 20px auto;
+    position: relative;
+    text-align: center;
+}
+.card-subtitles {
+    display: inline;
+    margin-left: 10%;
+}

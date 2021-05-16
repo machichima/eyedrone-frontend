@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import NevigatorBar from "../components/NevigatorBar";
+import NavigatorBar from "../components/NavigatorBar";
 import { Link } from 'react-router-dom';
 
 
 
 function NewPredict() {
     
-    return <NevigatorBar id={0} linkTo="/newModule" />
+    return <NavigatorBar id={0} linkTo="/" />
 
 }
 

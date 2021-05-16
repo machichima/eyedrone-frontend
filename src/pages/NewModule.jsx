@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import NevigatorBar from "../components/NevigatorBar";
+import { Link, useHistory } from "react-router-dom";
+import NavigatorBar from "../components/NavigatorBar";
 import Spot from "../components/Spot";
 import PrevPic from "../components/prev-pic";
 import TableRow from '../components/TableRow';
@@ -9,7 +10,7 @@ import FormData from 'form-data';
 import Tiff from 'tiff.js'
 import Table from 'react-bootstrap/Table'
 
-function NewModule() {
+function NewModule(props) {
     //var fileName = [];
     const [modelName, changeModelName] = useState('');
     const [modelId, changeModelId] = useState(0);
@@ -23,6 +24,8 @@ function NewModule() {
     var canvasRef = useRef(null);
     var [canvasDim, changeCanvasDim] = useState({ height: 0, width: 0 });
     const [infoOfPoints, changeInfoOfPoints] = useState([]);
+    const history = useHistory();
+    const pathname = window.location.pathname;
     //from here   指到隱藏的input element，並在button按下時驅動input file
     // const hiddenFileInput = React.useRef(null);
     // const handleClick = event => {
@@ -33,6 +36,7 @@ function NewModule() {
 
     React.useEffect(() => {
         function handleResize() {
+            console.log(props.location.pathname);
             console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
             let axisPrompt = axis;
             let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
@@ -46,7 +50,12 @@ function NewModule() {
 
         }
 
-        window.addEventListener('resize', handleResize)
+        if (props.location.pathname === '/newModule') {
+            window.addEventListener('resize', handleResize);
+        }
+        return () => {
+            window.removeEventListener('resize', handleResize);
+          };
     })
 
 
@@ -240,28 +249,51 @@ function NewModule() {
         console.log(infoOfPoints);
     }
 
-    function putInfo() {
+    const putInfo = async () => {
         //imageId.length
         console.log(totalGroup);
         let infoList = [];
+        let notFillAllInfo = false;
         for (let i = 0; i < axis.length - 1; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
             let infoPrompt = new Map();
             infoPrompt = infoOfPoints[i];
-            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，所以直接從imageId開始
+            let sizeOfMap = 0;
+            for (let k in infoPrompt) {
+                sizeOfMap++;
+            }
+            console.log(sizeOfMap);
+            if (sizeOfMap !== 8) {
+                notFillAllInfo = true;
+                console.log(infoPrompt);
+                console.log('not fill all info');
+                break;
+            }
+            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，infoPrompt從1開始
             delete infoPrompt.id;
             delete infoPrompt.group;
             console.log(infoPrompt);
             infoList.push(infoPrompt);
             //axios.put(`/api/images/${imageId}/`, {points: infoPrompt});
         }
+        if (notFillAllInfo) {
+            return;
+        }
         console.log(infoList);
         console.log({ name: modelName, points: infoList });
-        axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList }).catch((e) => console.log(e));
+        try {
+            const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
+            const res_substance = await axios.post(`/api/models/${modelId}/build/`);
+            console.log(res.data);
+            console.log(res_substance);
+            history.push({ pathname: '/', state: modelId });
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     return <div>
-        <NevigatorBar id={1} linkTo="/" />
-        <h1 className="fill-in-data-title">填寫數據</h1>
+        <NavigatorBar id={1} linkTo="/" />
+        <h1 className="big-title">填寫數據</h1>
         {/* 輸入model名稱 */}
         <form className="model-name-form" >
             <label>名稱: </label>
@@ -305,7 +337,9 @@ function NewModule() {
                         null)}
                 </tbody>
             </Table>
-            <button className='button' onClick={putInfo}>上傳</button>
+            <button className='button' onClick={putInfo}>
+                上傳
+            </button>
         </div>
 
     </div>
