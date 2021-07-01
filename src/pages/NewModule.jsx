@@ -7,7 +7,7 @@ import TableRow from '../components/TableRow';
 import axios from "../components/axios";
 // import axios from "axios"
 import FormData from 'form-data';
-import Tiff from 'tiff.js'
+import Tiff from 'tiff.js';
 import Table from 'react-bootstrap/Table'
 
 function NewModule(props) {
@@ -293,7 +293,7 @@ function NewModule(props) {
 
     return <div>
         <NavigatorBar id={1} linkTo="/" />
-        <h1 className="big-title">填寫數據</h1>
+        <h1 className="big-title">填寫模型數據</h1>
         {/* 輸入model名稱 */}
         <form className="model-name-form" >
             <label>名稱: </label>

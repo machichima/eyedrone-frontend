@@ -14,14 +14,14 @@ function Cards(props) {
                 onClick={handleShow}/>
         </h1>
 
-        <table style={{ textAlign: 'center', margin: '0px auto', display: show ? 'block' : 'none' }}>
-            <tbody style={{}}>
+        <table className='card-table' style={{ display: show ? 'block' : 'none' }}>
+            <tbody className='card-contents'>
                 {props.substances.map((val, index) =>
-                    <tr>
-                        <th style={{ verticalAlign: "top", fontSize: '20px' }}>{val.name}:</th>
-                        <td><div style={{ textAlign: 'start' }}>
-                            <p>features: {props.substances[index].features}</p>
-                            <p>r2: {props.substances[index].r2}</p>
+                    <tr key={index}>
+                        <th className='card-subtitles' style={{ verticalAlign: "top", fontSize: '20px' }}>{val.name}:</th>
+                        <td><div style={{ textAlign: 'start'}}>
+                            <p className="point-infos">features: {props.substances[index].features}</p>
+                            <p className="point-infos">r2: {props.substances[index].r2}</p>
                         </div></td>
                         {/* <td>features: {val.features}</td>
                         <td>r2: {val.r2}</td> */}

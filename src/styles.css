@@ -19,6 +19,7 @@ header button {
     background-color: #F0F5F9;
     position: absolute;
     right: 50px;
+    top: 15px;
 	width: 120px;
     height: 32px;
     border-radius: 10px;
@@ -29,7 +30,7 @@ header button {
 /* NewModule */
 .big-title {
     text-align: center;
-    margin-top: 50px;
+    margin-top: 30px;
 }
 .model-name-form {
     display: flex;
@@ -117,6 +118,7 @@ p {
 }
 .button {
     float: right;
+    display: block;
     background-color: #52616B;
     color: #fff;
     border-radius: 10px;
@@ -134,6 +136,14 @@ p {
 
 /* ------------------------------------------- */
 /* AllModuleAndPredict */
+.new-model-button {
+    text-decoration: none;
+    display: inline-block;
+    margin: 20px auto;
+    background-color: #52616B;
+    color: #fff;
+    border-radius: 10px;
+}
 .card-for-all-module-and-predict {
     width: 50vw;
     background-color: #c9d6df;
@@ -146,7 +156,34 @@ p {
     position: relative;
     text-align: center;
 }
+.card-table {
+    display: table;
+    text-align: center;
+    margin: 0px auto;
+}
+.card-contents {
+    display: inline-block;
+}
 .card-subtitles {
     display: inline;
-    margin-left: 10%;
+    margin-left: auto;
+}
+.point-infos {
+    margin-top: 0px;
+}
+
+/* general elements */
+.center-button {
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+    display: block;
+    text-align: center;
+}
+.upload-button {
+    width: 20vw;
+    height: 5vh;
+    color: #fff;
+    border-radius: 10px;
+    background-color: #52616B;
 }
