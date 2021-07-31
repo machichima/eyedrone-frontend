@@ -9,6 +9,7 @@ import axios from "../components/axios";
 import FormData from 'form-data';
 import Tiff from 'tiff.js';
 import Table from 'react-bootstrap/Table'
+import StreamMesPopUp from '../components/StreamMesPopUp';
 
 function NewModule(props) {
     //var fileName = [];
@@ -24,6 +25,8 @@ function NewModule(props) {
     var canvasRef = useRef(null);
     var [canvasDim, changeCanvasDim] = useState({ height: 0, width: 0 });
     const [infoOfPoints, changeInfoOfPoints] = useState([]);
+    const [streamTxt, changeStreamTxt] = useState("");
+    const [isShowStream, changeIsShowStream] = useState(false);
     const history = useHistory();
     const pathname = window.location.pathname;
     //from here   指到隱藏的input element，並在button按下時驅動input file
@@ -64,31 +67,19 @@ function NewModule(props) {
         changeModelName(e.target.value);
     }
 
-    const postModel = async () => {    //post model name
-        //Step 1:取得state數據
-        //Step 2:新增到JSON-Server數據庫中 
-        try {
-            const res = await axios.post("/api/models/", { name: modelName });
-            console.log(res.data);
-            changeModelId(res.data.id);
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
     const postImg = async (groupNum) => {    //post multiple image to backend
         //Step 1:取得state數據
         //Step 2:新增到JSON-Server數據庫中 
         console.log('----------------------------------');
         console.log(fileName[fileName.length - 1]);
         let param = new FormData();  // 创建form对象
-        param.append('model', modelId);  // 通过append向form对象添加数据
-        param.append('is_panel', (groupNum === 0) ? true : false);
+        //param.append('model', modelId);  // 通过append向form对象添加数据
+        //param.append('is_panel', (groupNum === 0) ? true : false);
         param.append('blue', fileName[fileName.length - 1][0]);
         param.append('green', fileName[fileName.length - 1][1]);
         param.append('red', fileName[fileName.length - 1][2]);
-        param.append('red_edge', fileName[fileName.length - 1][3]);
-        param.append('red_nir', fileName[fileName.length - 1][4]);
+        param.append('nir', fileName[fileName.length - 1][3]);
+        param.append('red_edge', fileName[fileName.length - 1][4]);
         const config = {
             headers: {
                 'content-type': 'multipart/form-data'
@@ -249,7 +240,7 @@ function NewModule(props) {
         console.log(infoOfPoints);
     }
 
-    const putInfo = async () => {
+    const postModelAndPutInfo = async () => {
         //imageId.length
         console.log(totalGroup);
         let infoList = [];
@@ -276,16 +267,56 @@ function NewModule(props) {
             //axios.put(`/api/images/${imageId}/`, {points: infoPrompt});
         }
         if (notFillAllInfo) {
+            alert("請確認 名稱 和 各點的資訊 是否為空?")
             return;
         }
         console.log(infoList);
         console.log({ name: modelName, points: infoList });
         try {
-            const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
-            const res_substance = await axios.post(`/api/models/${modelId}/build/`);
-            console.log(res.data);
-            console.log(res_substance);
-            history.push({ pathname: '/', state: modelId });
+            //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
+            const res = await axios.post("/api/models/", { name: modelName, panel: imageId[0]})
+            console.log(res.data.id);
+            const res_point = await axios.put(`/api/models/${res.data.id}/`, {name: modelName, panel: imageId[0], points: infoList});
+            console.log(res_point.data);
+            //下面為build的部分，晚點用
+            //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
+            fetch(`http://127.0.0.1:8000/api/models/${res.data.id}/build/`, 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            ).then((response => response.body))
+            .then(rs =>{
+                const reader = rs.getReader();
+                return new ReadableStream({
+                  async start(controller) {
+                    changeIsShowStream(true);
+                    while (true) {
+                      const { done, value } = await reader.read();
+            
+                      // When no more data needs to be consumed, break the reading
+                      if (done) {
+                        changeIsShowStream(false);
+                        break;
+                      }
+                      var enc = new TextDecoder("utf-8");
+                      const stringTxt = enc.decode(value).replace("<br>", "");
+                      console.log(stringTxt);
+                      changeStreamTxt(stringTxt);
+                      // Enqueue the next data chunk into our target stream
+                      controller.enqueue(value);
+                    }
+            
+                    // Close the stream
+                    //history.push({ pathname: '/', state: res.data.id });
+                    controller.close();
+                    reader.releaseLock();
+                  }
+                })
+            })
+            //console.log(res_substance);
         } catch (e) {
             console.log(e)
         }
@@ -298,14 +329,14 @@ function NewModule(props) {
         <form className="model-name-form" >
             <label>名稱: </label>
             <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName}></input>
-            <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button>
+            {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
         </form>
 
         {Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 ?
             <PrevPic key={index} group={index} onClick={showPrevPic} /> :
             null)}
         {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
-        <form id="upload-img-container" style={{ display: modelId !== 0 ? "block" : "none" }}>   {/* */}
+        <form id="upload-img-container" >   {/*style={{ display: modelId !== 0 ? "block" : "none" }} */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
             {/* <p>{fileName.toString()}</p> */}
             <input id="upload-img" type="file" onChange={uploadFile} multiple />
@@ -320,7 +351,8 @@ function NewModule(props) {
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
             <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <div className="handle-table" style={{ display: modelId !== 0 ? "block" : "none" }}>
+        <div className="handle-table" > 
+        {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
             <Table striped bordered hover>
                 <thead>
                     <tr>
@@ -337,11 +369,11 @@ function NewModule(props) {
                         null)}
                 </tbody>
             </Table>
-            <button className='button' onClick={putInfo}>
+            <button className='button' onClick={postModelAndPutInfo}>
                 上傳
             </button>
         </div>
-
+        <StreamMesPopUp show={isShowStream} message={streamTxt}/>
     </div>
 }
 

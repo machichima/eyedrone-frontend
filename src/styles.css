@@ -125,7 +125,7 @@ p {
     margin: 20px 0 50px 0;
 }
 .handle-table {
-    width: 80vw;
+    width: 70vw;
     margin: 0px auto 50px auto;
 }
 .input-data {
@@ -145,9 +145,11 @@ p {
     border-radius: 10px;
 }
 .card-for-all-module-and-predict {
-    width: 50vw;
+    width: 30vw;
     background-color: #c9d6df;
-    margin: 0px auto;
+    display: inline-block;
+    margin: 0px 20px;
+    /* margin: 0px auto; */
     border: 2px solid #c9d6df;
     border-radius: 10px;
 }

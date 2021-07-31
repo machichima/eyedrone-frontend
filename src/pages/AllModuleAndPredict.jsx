@@ -28,9 +28,11 @@ function AllModuleAndPredict() {
     const modelNum = 0;
     const predictNum = 0;
     console.log(Math.pow(2, modelNum));
-    console.log(Math.pow(2, predictNum)+1);
-    // history.location.state
+    console.log(Math.pow(2, predictNum) + 1);
     let history = useHistory();
+    console.log(history.location.state);
+
+
     return <div>
         <NavigatorBar id={0} linkTo="null" />
         <div>
@@ -42,7 +44,7 @@ function AllModuleAndPredict() {
                     </button>
                 </Link>
             </div>
-            <Cards key = {Math.pow(2, modelNum)} name={name} substances={substances} />
+            <Cards key={Math.pow(2, modelNum)} name={name} substances={substances} />
             <hr />
             <h1 className='big-title'>所有預測</h1>
             <div className='center-button'>
@@ -52,7 +54,7 @@ function AllModuleAndPredict() {
                     </button>
                 </Link>
             </div>
-            <Cards key = {Math.pow(2, predictNum)+1} name={name} substances={substances} />)
+            <Cards key={Math.pow(2, predictNum) + 1} name={name} substances={substances} />
         </div>
     </div>
 
