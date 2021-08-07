@@ -2,8 +2,22 @@ import React, { useState } from "react";
 import NavigatorBar from "../components/NavigatorBar";
 import { Link, useHistory } from "react-router-dom";
 import Cards from '../components/Cards';
+import axios from "../components/axios";
+import ModuleInfoPopUp from "../components/moduleInfoPopUp";
 
-function AllModuleAndPredict() {
+function AllModuleAndPredict(props) {
+
+    const card_container = {
+        width: "70vw",
+        margin: "0 auto",
+        display: "grid",
+        gridGap: "20px",
+        gridTemplateColumns: "1fr 1fr 1fr 1fr",
+        justifyContent: "space-between",
+        alignItems: "center",
+
+    }
+
     const substances = [{
         "name": "do",
         "features": "red, green, blue",
@@ -32,6 +46,30 @@ function AllModuleAndPredict() {
     let history = useHistory();
     console.log(history.location.state);
 
+    const [modelData, changeModelData] = useState();
+    const [clickedCardId, chclickedCardId] = useState(0);
+
+
+    React.useEffect(() => {
+        if (props.location.pathname === '/') {
+            window.addEventListener('load', async () => {
+                const res = await axios.get('/api/models/');
+                let data = [];
+                console.log(res);
+                for (let i = 1; i <= res.data.length; i++) {
+                    const res_id = await axios.get('/api/models/' + i);
+                    data.push(res_id.data);
+                }
+                console.log(data);
+                changeModelData(data);
+            });
+        }
+    });
+
+    function getClickedCard(id) {
+        console.log(id);
+        chclickedCardId(id);
+    }
 
     return <div>
         <NavigatorBar id={0} linkTo="null" />
@@ -44,7 +82,12 @@ function AllModuleAndPredict() {
                     </button>
                 </Link>
             </div>
-            <Cards key={Math.pow(2, modelNum)} name={name} substances={substances} />
+            <div style={card_container}>
+                {modelData != null ? modelData.map((val, index) => val.group !== null ?
+                    <Cards key={Math.pow(2, index)} id={val.id} name={val.name} onClick={getClickedCard} /> :
+                    null) : null}
+
+            </div>
             <hr />
             <h1 className='big-title'>所有預測</h1>
             <div className='center-button'>
@@ -54,8 +97,14 @@ function AllModuleAndPredict() {
                     </button>
                 </Link>
             </div>
-            <Cards key={Math.pow(2, predictNum) + 1} name={name} substances={substances} />
+            <div style={{ textAlign: "center" }}>
+                {/* <Cards key={Math.pow(2, predictNum) + 1} name={name} substances={substances} /> */}
+            </div>
         </div>
+        {
+            clickedCardId != 0 ? <ModuleInfoPopUp substances={modelData[clickedCardId-1].substances} /> : null
+        }
+        
     </div>
 
 }

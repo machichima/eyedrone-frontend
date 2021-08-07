@@ -145,10 +145,10 @@ p {
     border-radius: 10px;
 }
 .card-for-all-module-and-predict {
-    width: 30vw;
+    width: 15vw;
     background-color: #c9d6df;
     display: inline-block;
-    margin: 0px 20px;
+    margin: 0px auto;
     /* margin: 0px auto; */
     border: 2px solid #c9d6df;
     border-radius: 10px;
