@@ -102,7 +102,10 @@ function AllModuleAndPredict(props) {
             </div>
         </div>
         {
-            clickedCardId != 0 ? <ModuleInfoPopUp substances={modelData[clickedCardId-1].substances} /> : null
+            clickedCardId != 0 ? <ModuleInfoPopUp modelName={modelData[clickedCardId-1].name} 
+                                    substances={modelData[clickedCardId-1].substances} 
+                                    onClick={getClickedCard}
+                                    /> : null
         }
         
     </div>
