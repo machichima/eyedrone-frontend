@@ -35,7 +35,7 @@ function ModuleInfoPopUp(props) {
                 {props.substances.map((val, index) => {
                     return <div>
                         <h4 style={{ marginLeft: "0px" }}>{props.substances[index].name}</h4>
-                        <Table striped bordered hover>
+                        <Table striped bordered>
                             <tbody>
                                 <tr>
                                     <td>formula</td>
