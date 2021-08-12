@@ -18,26 +18,6 @@ function AllModuleAndPredict(props) {
 
     }
 
-    const substances = [{
-        "name": "do",
-        "features": "red, green, blue",
-        "r2": 89.87
-    },
-    {
-        "name": "bod",
-        "features": "red, green, blue",
-        "r2": 89.87
-    },
-    {
-        "name": "ss",
-        "features": "red, green, blue",
-        "r2": 89.87
-    },
-    {
-        "name": "nh3n",
-        "features": "red, green, blue",
-        "r2": 89.87
-    }];
     const name = '123';
     const modelNum = 0;
     const predictNum = 0;
@@ -47,14 +27,20 @@ function AllModuleAndPredict(props) {
     console.log(history.location.state);
 
     const [modelData, changeModelData] = useState();
+    const [predictData, chPredictData] = useState();
     const [clickedCardId, chclickedCardId] = useState(0);
 
 
     React.useEffect(() => {
         if (props.location.pathname === '/') {
             window.addEventListener('load', async () => {
+                const resPredict = await axios.get('/api/predicts/');
+                chPredictData(resPredict.data);
+                console.log(resPredict.data);
+
                 const res = await axios.get('/api/models/');
                 let data = [];
+                let predictDataTemp = []
                 console.log(res);
                 for (let i = 1; i <= res.data.length; i++) {
                     const res_id = await axios.get('/api/models/' + i);
@@ -97,8 +83,10 @@ function AllModuleAndPredict(props) {
                     </button>
                 </Link>
             </div>
-            <div style={{ textAlign: "center" }}>
-                {/* <Cards key={Math.pow(2, predictNum) + 1} name={name} substances={substances} /> */}
+            <div style={card_container}>
+                {predictData != null ? predictData.map((val, index) => 
+                    <Cards key={Math.pow(2, index) + 1} id={val.id} name={val.created_at}/>
+                ) : null}
             </div>
         </div>
         {

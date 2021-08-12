@@ -9,7 +9,7 @@ function Cards(props) {
     }
 
     return <div className="card-for-all-module-and-predict" onClick={()=>props.onClick(props.id)}>
-        <h2 className='model-name' style={{}}>{props.name}</h2>
+        <h2 className='model-name' style={{fontSize: "14px"}}>{props.name}</h2>
     </div>
 }
 
