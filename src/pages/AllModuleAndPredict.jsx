@@ -4,6 +4,7 @@ import { Link, useHistory } from "react-router-dom";
 import Cards from '../components/Cards';
 import axios from "../components/axios";
 import ModuleInfoPopUp from "../components/moduleInfoPopUp";
+import PredictInfoPopUp from "../components/predictInfoPopUp";
 
 function AllModuleAndPredict(props) {
 
@@ -29,6 +30,7 @@ function AllModuleAndPredict(props) {
     const [modelData, changeModelData] = useState();
     const [predictData, chPredictData] = useState();
     const [clickedCardId, chclickedCardId] = useState(0);
+    const [cliPreCardId, chCliPreCardId] = useState(0);
 
 
     React.useEffect(() => {
@@ -55,6 +57,10 @@ function AllModuleAndPredict(props) {
     function getClickedCard(id) {
         console.log(id);
         chclickedCardId(id);
+    }
+
+    function getPredictClickedCard(id) {
+        chCliPreCardId(id);
     }
 
     return <div>
@@ -85,7 +91,7 @@ function AllModuleAndPredict(props) {
             </div>
             <div style={card_container}>
                 {predictData != null ? predictData.map((val, index) => 
-                    <Cards key={Math.pow(2, index) + 1} id={val.id} name={val.created_at}/>
+                    <Cards key={Math.pow(2, index) + 1} id={val.id} dateTime={val.created_at} onClick={getPredictClickedCard}/>
                 ) : null}
             </div>
         </div>
@@ -93,6 +99,11 @@ function AllModuleAndPredict(props) {
             clickedCardId != 0 ? <ModuleInfoPopUp modelName={modelData[clickedCardId-1].name} 
                                     substances={modelData[clickedCardId-1].substances} 
                                     onClick={getClickedCard}
+                                    /> : null
+        }
+        {
+            cliPreCardId != 0 ? <PredictInfoPopUp created_at={predictData[cliPreCardId-1].created_at} 
+                                    onClick={getPredictClickedCard}
                                     /> : null
         }
         
