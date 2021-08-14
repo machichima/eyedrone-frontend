@@ -103,6 +103,7 @@ function AllModuleAndPredict(props) {
         }
         {
             cliPreCardId != 0 ? <PredictInfoPopUp created_at={predictData[cliPreCardId-1].created_at} 
+                                    results={predictData[cliPreCardId-1].results}
                                     onClick={getPredictClickedCard}
                                     /> : null
         }
