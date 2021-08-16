@@ -76,7 +76,7 @@ function AllModuleAndPredict(props) {
             </div>
             <div style={card_container}>
                 {modelData != null ? modelData.map((val, index) => val.group !== null ?
-                    <Cards key={Math.pow(2, index)} id={val.id} name={val.name} onClick={getClickedCard} /> :
+                    <Cards key={2*index} id={val.id} name={val.name} onClick={getClickedCard} /> :
                     null) : null}
 
             </div>
@@ -91,7 +91,7 @@ function AllModuleAndPredict(props) {
             </div>
             <div style={card_container}>
                 {predictData != null ? predictData.map((val, index) => 
-                    <Cards key={Math.pow(2, index) + 1} id={val.id} dateTime={val.created_at} onClick={getPredictClickedCard}/>
+                    <Cards key={2*index + 1} id={val.id} dateTime={val.created_at} onClick={getPredictClickedCard}/>
                 ) : null}
             </div>
         </div>

@@ -27,6 +27,8 @@ function NewModule(props) {
     const [infoOfPoints, changeInfoOfPoints] = useState([]);
     const [streamTxt, changeStreamTxt] = useState("");
     const [isShowStream, changeIsShowStream] = useState(false);
+    const [showUploadBtn, setShowUploadBtn] = useState(false);
+
     const history = useHistory();
     const pathname = window.location.pathname;
     //from here   指到隱藏的input element，並在button按下時驅動input file
@@ -58,7 +60,7 @@ function NewModule(props) {
         }
         return () => {
             window.removeEventListener('resize', handleResize);
-          };
+        };
     })
 
 
@@ -131,6 +133,7 @@ function NewModule(props) {
             changeTotalGroup(1);
             return;
         }
+        setShowUploadBtn(true);
         if (axis[axis.length - 1].group >= totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
             postImg(axis[axis.length - 1].group);
         }
@@ -274,13 +277,13 @@ function NewModule(props) {
         console.log({ name: modelName, points: infoList });
         try {
             //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
-            const res = await axios.post("/api/models/", { name: modelName, panel: imageId[0]})
+            const res = await axios.post("/api/models/", { name: modelName, panel: imageId[0] })
             console.log(res.data.id);
-            const res_point = await axios.put(`/api/models/${res.data.id}/`, {name: modelName, panel: imageId[0], points: infoList});
+            const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName, panel: imageId[0], points: infoList });
             console.log(res_point.data);
             //下面為build的部分，晚點用
             //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
-            fetch(`http://127.0.0.1:8000/api/models/${res.data.id}/build/`, 
+            fetch(`http://127.0.0.1:8000/api/models/${res.data.id}/build/`,
                 {
                     method: 'POST',
                     headers: {
@@ -288,34 +291,34 @@ function NewModule(props) {
                     },
                 }
             ).then((response => response.body))
-            .then(rs =>{
-                const reader = rs.getReader();
-                return new ReadableStream({
-                  async start(controller) {
-                    changeIsShowStream(true);
-                    while (true) {
-                      const { done, value } = await reader.read();
-            
-                      // When no more data needs to be consumed, break the reading
-                      if (done) {
-                        changeIsShowStream(false);
-                        break;
-                      }
-                      var enc = new TextDecoder("utf-8");
-                      const stringTxt = enc.decode(value).replace("<br>", "");
-                      console.log(stringTxt);
-                      changeStreamTxt(stringTxt);
-                      // Enqueue the next data chunk into our target stream
-                      controller.enqueue(value);
-                    }
-            
-                    // Close the stream
-                    //history.push({ pathname: '/', state: res.data.id });
-                    controller.close();
-                    reader.releaseLock();
-                  }
+                .then(rs => {
+                    const reader = rs.getReader();
+                    return new ReadableStream({
+                        async start(controller) {
+                            changeIsShowStream(true);
+                            while (true) {
+                                const { done, value } = await reader.read();
+
+                                // When no more data needs to be consumed, break the reading
+                                if (done) {
+                                    changeIsShowStream(false);
+                                    break;
+                                }
+                                var enc = new TextDecoder("utf-8");
+                                const stringTxt = enc.decode(value).replace("<br>", "");
+                                console.log(stringTxt);
+                                changeStreamTxt(stringTxt);
+                                // Enqueue the next data chunk into our target stream
+                                controller.enqueue(value);
+                            }
+
+                            // Close the stream
+                            //history.push({ pathname: '/', state: res.data.id });
+                            controller.close();
+                            reader.releaseLock();
+                        }
+                    })
                 })
-            })
             //console.log(res_substance);
         } catch (e) {
             console.log(e)
@@ -351,8 +354,8 @@ function NewModule(props) {
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
             <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <div className="handle-table" > 
-        {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
+        <div className="handle-table" >
+            {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
             <Table striped bordered hover>
                 <thead>
                     <tr>
@@ -369,11 +372,14 @@ function NewModule(props) {
                         null)}
                 </tbody>
             </Table>
-            <button className='button' onClick={postModelAndPutInfo}>
-                上傳
-            </button>
+            <div className='center-button'>
+                <button className='upload-button' style={{ display: (fileName.length !== 0 && showUploadBtn === true) ? 'inline-block' : 'none' }}
+                    onClick={postModelAndPutInfo}>
+                    上傳
+                </button>
+            </div>
         </div>
-        <StreamMesPopUp show={isShowStream} message={streamTxt}/>
+        <StreamMesPopUp show={isShowStream} message={streamTxt} />
     </div>
 }
 

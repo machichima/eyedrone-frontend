@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import '../popUp.css';
 import JSZip from "jszip";
 import { saveAs } from 'file-saver';
+import { RestaurantRounded } from "@material-ui/icons";
 
 
 function useOutsideAlerter(ref, props) {
@@ -31,15 +32,20 @@ function PredictInfoPopUp(props) {
     function downloadAllImage() {
         var zip = JSZip();
         let folder = zip.folder("predict");
+        let picCount = 0;
         props.results.map((val, index)=>{
             {Object.entries(val).map(([key, value])=> {
                 if(key !== "image" && value !== null){
+                    picCount++;
                     const imageBlob = fetch(value).then(response => response.blob());
                     let fileName = value.split('/')[value.split('/').length-1];
                     folder.file(fileName, imageBlob);
                 }
             })}
-        })
+        });
+        if(picCount == 0) {
+            return;
+        }
         zip.generateAsync({type: "blob"}).then(content => {
             saveAs(content, "predict.zip");
         });

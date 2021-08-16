@@ -33,7 +33,7 @@ function ModuleInfoPopUp(props) {
             <div style={{ margin: "20px" }}>
                 <h2 style={{ fontWeight: "700" }}>{props.modelName}</h2>
                 {props.substances.map((val, index) => {
-                    return <div>
+                    return <div key={index}>
                         <h4 style={{ marginLeft: "0px" }}>{props.substances[index].name}</h4>
                         <Table striped bordered>
                             <tbody>
@@ -45,13 +45,13 @@ function ModuleInfoPopUp(props) {
                                     <td rowSpan={props.substances[index].features.length}>features</td>
                                     <td key={0}>{props.substances[index].features[index]}</td>
                                 </tr>
-                                {props.substances[index].features.map((val, index) => index > 0 ? <tr><td key={index}>{val}</td></tr> : null)}
+                                {props.substances[index].features.map((val, index) => index > 0 ? <tr key={2*index}><td>{val}</td></tr> : null)}
 
                                 <tr>
                                     <td rowSpan={props.substances[index].coefficients.length}>coefficients</td>
                                     <td key={0}>{props.substances[index].coefficients[0]}</td>
                                 </tr>
-                                {props.substances[index].coefficients.map((val, index) => index > 0 ? <tr><td key={index}>{val}</td></tr> : null)}
+                                {props.substances[index].coefficients.map((val, index) => index > 0 ? <tr key={2*index+1}><td>{val}</td></tr> : null)}
 
                                 <tr>
                                     <td>intercept</td>
