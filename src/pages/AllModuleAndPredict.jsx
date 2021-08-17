@@ -68,11 +68,11 @@ function AllModuleAndPredict(props) {
         <div>
             <h1 className='big-title'>所有模型</h1>
             <div className='center-button'>
-                <Link to={"/newModule"} style={{ textDecoration: 'none' }}>
-                    <button className="new-model-button">
+                {/* <Link to={"/newModule"} style={{ textDecoration: 'none' }}> */}
+                    <button className="new-model-button" onClick={()=>{window.location.href = "/newModule";}}>
                         新增模型
                     </button>
-                </Link>
+                {/* </Link> */}
             </div>
             <div style={card_container}>
                 {modelData != null ? modelData.map((val, index) => val.group !== null ?
@@ -83,11 +83,11 @@ function AllModuleAndPredict(props) {
             <hr />
             <h1 className='big-title'>所有預測</h1>
             <div className='center-button'>
-                <Link to={"/newPredict"} style={{ textDecoration: 'none' }}>
-                    <button className="new-model-button">
+                {/* <Link to={"/newPredict"} style={{ textDecoration: 'none' }}> */}
+                    <button className="new-model-button" onClick={()=>{window.location.href = "/newPredict";}}>
                         新增預測
                     </button>
-                </Link>
+                {/* </Link> */}
             </div>
             <div style={card_container}>
                 {predictData != null ? predictData.map((val, index) => 

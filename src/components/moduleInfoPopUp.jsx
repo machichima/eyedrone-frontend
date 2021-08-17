@@ -4,6 +4,7 @@ import Table from 'react-bootstrap/Table'
 import '../popUp.css';
 
 
+
 function useOutsideAlerter(ref, props) {
     useEffect(() => {
         /**

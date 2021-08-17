@@ -6,11 +6,9 @@ function NavigatorBar(props) {
         <header>
             <h1>Eyedrone</h1>
             {props.linkTo !== "null" ?
-                <Link to={props.linkTo}>
-                    <button className="show-data">
+                    <button className="show-data" onClick={()=>{window.location.href = "/";}}>
                         主畫面
-                    </button>
-                </Link> :
+                    </button>:
                 null}
         </header>
     </div>
