@@ -29,6 +29,8 @@ function NewModule(props) {
     const [isShowStream, changeIsShowStream] = useState(false);
     const [showUploadBtn, setShowUploadBtn] = useState(false);
 
+    const [modelDataForEdit, chModelDataForEdit] = useState(null);
+
     const history = useHistory();
     const pathname = window.location.pathname;
     //from here   指到隱藏的input element，並在button按下時驅動input file
@@ -40,6 +42,40 @@ function NewModule(props) {
 
 
     React.useEffect(() => {
+        let url = new URL(window.location.href);
+        let id = url.searchParams.get("id");
+        console.log(id);
+        if (id != null) {
+            window.addEventListener('load', async () => {
+                const res = await axios.get('/api/models/' + id);
+                const resImg = await axios.get('/api/images/');
+                console.log(res.data);
+                console.log(resImg.data);
+                chModelDataForEdit(res.data);
+                changeModelName(res.data.name);
+
+                let allImgId = [];
+                allImgId.push(res.data.panel.id);
+                res.data.points.map((val, index)=>{
+                    if(!allImgId.includes(val.image)){
+                        allImgId.push(val.image);
+                    }
+                });
+                
+                allImgId.map((val, index)=>{
+                    let fileNameTemp = [];
+                    Object.entries(resImg.data[val-1]).map(([key, value])=> {
+                        if(key !== "id" && value !== null){
+                            fileNameTemp.push(value)
+                        }
+                    })
+                    console.log(val-1);
+                    console.log(fileNameTemp);
+                    changeFileName(...fileName, fileNameTemp);
+                })
+            });
+        }
+
         function handleResize() {
             console.log(props.location.pathname);
             console.log('resized to: ', window.innerWidth, 'x', window.innerHeight)
@@ -151,6 +187,40 @@ function NewModule(props) {
         let file = fileName[groupNum - 1][0];
         console.log(URL.createObjectURL(file));
         console.log(file);
+        drawTiffCanvas(file);
+    }
+
+    function uploadFile(event) {
+        if (event.target.files.length !== 5) {
+            alert('請上傳五張圖片');
+            return;
+        }
+        let fileNameTemp = [];   //先將fileName內的都清空
+        for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
+            let file = event.target.files[i];
+            console.log(window.URL.createObjectURL(file));
+            console.log(file.name);
+            // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
+            fileNameTemp.push(event.target.files[i]);
+            if (i === 0) {
+                drawTiffCanvas(file);
+            }
+        }
+        changeFileName([...fileName, fileNameTemp].sort((a, b) => {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+        }));    //改變fileName的數值
+
+    }
+
+    function drawTiffCanvas(file) {
         var reader = new FileReader();
 
         reader.onload = function (e) {
@@ -171,55 +241,6 @@ function NewModule(props) {
         };
         reader.readAsArrayBuffer(file);
         changeShowCanvas(true);
-    }
-
-    function uploadFile(event) {
-        if (event.target.files.length !== 5) {
-            alert('請上傳五張圖片');
-            return;
-        }
-        let fileNameTemp = [];   //先將fileName內的都清空
-        for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
-            let file = event.target.files[i];
-            console.log(window.URL.createObjectURL(file));
-            console.log(file.name);
-            // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
-            fileNameTemp.push(event.target.files[i]);
-            if (i === 0) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    var buffer = e.target.result;
-                    console.log('--------------------------------------');
-                    console.log(buffer);
-                    var tiff = new Tiff({ buffer: buffer });
-                    var canvas = tiff.toCanvas();
-                    if (canvas) {
-                        //document.querySelector('#output').append(canvas);
-                        const [width, height] = [canvas.width, canvas.height]
-                        changeCanvasDim({ width, height });
-                        var canvasTemp = canvasRef.current;
-                        const context = canvasTemp.getContext('2d');
-                        context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-                    }
-                    // The file's text will be printed here
-                };
-                reader.readAsArrayBuffer(file);
-                changeShowCanvas(true);
-            }
-        }
-        changeFileName([...fileName, fileNameTemp].sort((a, b) => {
-            if (a.name < b.name) {
-                return -1;
-            }
-            if (a.name > b.name) {
-                return 1;
-            }
-
-            // names must be equal
-            return 0;
-        }));    //改變fileName的數值
-
     }
 
     function handlePointsInfo(info) {
@@ -331,7 +352,7 @@ function NewModule(props) {
         {/* 輸入model名稱 */}
         <form className="model-name-form" >
             <label>名稱: </label>
-            <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName}></input>
+            <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName} />
             {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
         </form>
 

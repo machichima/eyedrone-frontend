@@ -6,10 +6,6 @@ function Cards(props) {
     const [show, setShow] = useState(false);
     const { fontSize, ref } = useFitText();
 
-    function handleShow() {
-        setShow(!show);
-    }
-
     return <div className="card-for-all-module-and-predict" onClick={()=>props.onClick(props.id)}>
         {props.dateTime === undefined ? <h2 ref={ref} className='model-name' style={{ fontSize, height: 20, width: 100 }}>{props.name}</h2>
             : <h2 ref={ref} className='model-name' style={{ fontSize, height: 40, width: 100 }}>

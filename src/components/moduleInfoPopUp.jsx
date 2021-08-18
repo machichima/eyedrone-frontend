@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import ProgressBar from "./ProgressBar";
 import Table from 'react-bootstrap/Table'
 import '../popUp.css';
+import EditIcon from '@material-ui/icons/Edit';
 
 
 
@@ -31,6 +32,7 @@ function ModuleInfoPopUp(props) {
 
     return <div className="popUp-background">
         <div className="popUp" style={{ textAlign: "start", overflowY: "scroll"}} ref={wrapperRef}>
+            <EditIcon style={{float: "right", margin: "20px"}} onClick={()=>{window.location.href="/newModule?id="+props.id}}/>
             <div style={{ margin: "20px" }}>
                 <h2 style={{ fontWeight: "700" }}>{props.modelName}</h2>
                 {props.substances.map((val, index) => {
