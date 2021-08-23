@@ -54,25 +54,47 @@ function NewModule(props) {
                 chModelDataForEdit(res.data);
                 changeModelName(res.data.name);
 
+                // 可能之後會改
                 let allImgId = [];
                 allImgId.push(res.data.panel.id);
-                res.data.points.map((val, index)=>{
-                    if(!allImgId.includes(val.image)){
+                res.data.points.map((val, index) => {
+                    if (!allImgId.includes(val.image)) {
                         allImgId.push(val.image);
                     }
                 });
-                
-                allImgId.map((val, index)=>{
+                changeTotalGroup(allImgId.length);
+                allImgId.map((val, index) => {
                     let fileNameTemp = [];
-                    Object.entries(resImg.data[val-1]).map(([key, value])=> {
-                        if(key !== "id" && value !== null){
+                    Object.entries(resImg.data[val - 1]).map(([key, value]) => {
+                        if (key !== "id" && value !== null) {
                             fileNameTemp.push(value)
                         }
                     })
-                    console.log(val-1);
-                    console.log(fileNameTemp);
                     changeFileName(...fileName, fileNameTemp);
                 })
+                /////
+
+                res.data.points.map((val, index) => {
+                    let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
+                    let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
+                    let [x, y] = [val.x, val.y];
+                    let [xShow, yShow] = [Math.round(val.x / canvasDim.width * currentW), Math.round(val.y / canvasDim.height * currentH)];
+                    let group = allImgId.indexOf(val.image);
+                    changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
+
+                    let infoPrompt = {id: index, group: group, x: x, y: y};
+                    Object.entries(val).map(([key, value]) => {
+                        if (key !== "image" && key !== "x" && key !== "y" && value !== null) {
+                            infoPrompt = {...infoPrompt, [key]: parseInt(value)}
+                        }
+                    })
+                    changeInfoOfPoints([...infoOfPoints, infoPrompt]);
+                    console.log(infoPrompt);
+                });
+
+
+
+
             });
         }
 
@@ -185,7 +207,8 @@ function NewModule(props) {
         changeGroup(groupNum - 1);
         console.log(groupNum);
         let file = fileName[groupNum - 1][0];
-        console.log(URL.createObjectURL(file));
+
+        //console.log(URL.createObjectURL(file));
         console.log(file);
         drawTiffCanvas(file);
     }
@@ -389,8 +412,10 @@ function NewModule(props) {
                 </thead>
                 <tbody>
                     {axis.map((val, index) => val.group !== null ?
-                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} onChange={handlePointsInfo} /> :
-                        null)}
+                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} value={infoOfPoints[index-1]} onChange={handlePointsInfo} /> :
+                        null)
+                        // 因為 group 的第一個元素為 null，所以 infoOfPoint 的 index 為 index - 1
+                    }
                 </tbody>
             </Table>
             <div className='center-button'>
