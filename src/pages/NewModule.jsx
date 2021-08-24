@@ -74,13 +74,17 @@ function NewModule(props) {
                 })
                 /////
 
+                let axisTemp = [];
+                let infoOfPointsTemp = [];
+
                 res.data.points.map((val, index) => {
                     let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
                     let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
                     let [x, y] = [val.x, val.y];
                     let [xShow, yShow] = [Math.round(val.x / canvasDim.width * currentW), Math.round(val.y / canvasDim.height * currentH)];
                     let group = allImgId.indexOf(val.image);
-                    changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
+                    axisTemp = [...axisTemp, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group);
+                    // changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
 
                     let infoPrompt = {id: index, group: group, x: x, y: y};
                     Object.entries(val).map(([key, value]) => {
@@ -88,13 +92,11 @@ function NewModule(props) {
                             infoPrompt = {...infoPrompt, [key]: parseInt(value)}
                         }
                     })
-                    changeInfoOfPoints([...infoOfPoints, infoPrompt]);
-                    console.log(infoPrompt);
+                    infoOfPointsTemp = [...infoOfPointsTemp, infoPrompt];
+                    // changeInfoOfPoints([...infoOfPoints, infoPrompt]);
                 });
-
-
-
-
+                changeAxis(axisTemp);
+                changeInfoOfPoints(infoOfPointsTemp);
             });
         }
 
@@ -398,9 +400,9 @@ function NewModule(props) {
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
             <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <div className="handle-table" >
+        <div className="handle-table" style={{width: "70vw"}}>
             {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
-            <Table striped bordered hover>
+            <Table striped bordered hover style={{tableLayout: "fixed", width: "100%" }}>
                 <thead>
                     <tr>
                         <th>group</th>
@@ -412,7 +414,7 @@ function NewModule(props) {
                 </thead>
                 <tbody>
                     {axis.map((val, index) => val.group !== null ?
-                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} value={infoOfPoints[index-1]} onChange={handlePointsInfo} /> :
+                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
                         null)
                         // 因為 group 的第一個元素為 null，所以 infoOfPoint 的 index 為 index - 1
                     }
@@ -420,7 +422,8 @@ function NewModule(props) {
             </Table>
             <div className='center-button'>
                 <button className='upload-button' style={{ display: (fileName.length !== 0 && showUploadBtn === true) ? 'inline-block' : 'none' }}
-                    onClick={postModelAndPutInfo}>
+                    onClick={()=>{console.log(axis)}}>
+                    {/* postModelAndPutInfo */}
                     上傳
                 </button>
             </div>
