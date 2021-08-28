@@ -33,6 +33,8 @@ function NewModule(props) {
 
     const history = useHistory();
     const pathname = window.location.pathname;
+    let url = new URL(window.location.href);
+    let id = url.searchParams.get("id");
     //from here   指到隱藏的input element，並在button按下時驅動input file
     // const hiddenFileInput = React.useRef(null);
     // const handleClick = event => {
@@ -42,8 +44,6 @@ function NewModule(props) {
 
 
     React.useEffect(() => {
-        let url = new URL(window.location.href);
-        let id = url.searchParams.get("id");
         console.log(id);
         if (id != null) {
             window.addEventListener('load', async () => {
@@ -62,6 +62,7 @@ function NewModule(props) {
                         allImgId.push(val.image);
                     }
                 });
+                changeImageId(allImgId);
                 changeTotalGroup(allImgId.length);
                 allImgId.map((val, index) => {
                     let fileNameTemp = [];
@@ -86,10 +87,10 @@ function NewModule(props) {
                     axisTemp = [...axisTemp, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group);
                     // changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
 
-                    let infoPrompt = {id: index, group: group, x: x, y: y};
+                    let infoPrompt = { id: index, group: group, x: x, y: y };
                     Object.entries(val).map(([key, value]) => {
                         if (key !== "image" && key !== "x" && key !== "y" && value !== null) {
-                            infoPrompt = {...infoPrompt, [key]: parseInt(value)}
+                            infoPrompt = { ...infoPrompt, [key]: parseInt(value) }
                         }
                     })
                     infoOfPointsTemp = [...infoOfPointsTemp, infoPrompt];
@@ -323,13 +324,22 @@ function NewModule(props) {
         console.log({ name: modelName, points: infoList });
         try {
             //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
-            const res = await axios.post("/api/models/", { name: modelName, panel: imageId[0] })
-            console.log(res.data.id);
-            const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName, panel: imageId[0], points: infoList });
-            console.log(res_point.data);
+            let id_for_build = 0;
+            if (id != null) {
+                const res_point = await axios.put(`/api/models/${id}/`, { name: modelName, panel: imageId[0], points: infoList });
+                id_for_build = id;
+                console.log(res_point.data);
+            } else {
+                const res = await axios.post("/api/models/", { name: modelName, panel: imageId[0] })
+                console.log(res.data.id);
+                id_for_build = res.data.id;
+                const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName, panel: imageId[0], points: infoList });
+                console.log(res_point.data);
+            }
+
             //下面為build的部分，晚點用
             //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
-            fetch(`http://127.0.0.1:8000/api/models/${res.data.id}/build/`,
+            fetch(`http://127.0.0.1:8000/api/models/${id_for_build}/build/`,
                 {
                     method: 'POST',
                     headers: {
@@ -400,9 +410,9 @@ function NewModule(props) {
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
             <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <div className="handle-table" style={{width: "70vw"}}>
+        <div className="handle-table" style={{ width: "70vw" }}>
             {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
-            <Table striped bordered hover style={{tableLayout: "fixed", width: "100%" }}>
+            <Table striped bordered hover style={{ tableLayout: "fixed", width: "100%" }}>
                 <thead>
                     <tr>
                         <th>group</th>
@@ -416,13 +426,16 @@ function NewModule(props) {
                     {axis.map((val, index) => val.group !== null ?
                         <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
                         null)
-                        // 因為 group 的第一個元素為 null，所以 infoOfPoint 的 index 為 index - 1
                     }
                 </tbody>
             </Table>
             <div className='center-button'>
-                <button className='upload-button' style={{ display: (fileName.length !== 0 && showUploadBtn === true) ? 'inline-block' : 'none' }}
-                    onClick={()=>{console.log(axis)}}>
+                <button className='upload-button' style={{
+                    display:
+                        (fileName.length !== 0 && showUploadBtn === true) || id != null ?
+                            'inline-block' : 'none'
+                }}
+                    onClick={postModelAndPutInfo}>
                     {/* postModelAndPutInfo */}
                     上傳
                 </button>
