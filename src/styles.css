@@ -89,6 +89,14 @@ header button {
     border-radius: 10px;
     margin: 0 20px 0 0;
 }
+
+.hint {
+    text-align: center;
+    font-size: 10px;
+    color: red;
+    margin: 5px;
+}
+
 .image-container {
     position: relative; 
     display: block;
@@ -107,11 +115,15 @@ header button {
     position: absolute;
     left: 10px;
     top: 50px;
-    background-color: blueviolet;
+    background-color: orange;
     width: 10px;
     height: 10px;
     border-radius: 50%;
 }
+.spot:hover {
+    background-color: red;
+}
+
 p {
     font-size: 20px;
     margin: 20px;

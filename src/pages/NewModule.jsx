@@ -44,6 +44,11 @@ function NewModule(props) {
 
 
     React.useEffect(() => {
+
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        }, false);
+
         console.log(id);
         if (id != null) {
             window.addEventListener('load', async () => {
@@ -159,6 +164,10 @@ function NewModule(props) {
     }
 
     function pointSpot(e) {     //當點擊圖片時取得滑鼠的點(滑鼠在圖片上的座標點，在圖片坐標系)
+        if (e.button === 2) {
+            return;
+        }
+
         let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
         let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
         let [x, y] = [Math.round(e.nativeEvent.offsetX / currentW * canvasDim.width), Math.round(e.nativeEvent.offsetY / currentH * canvasDim.height)];
@@ -168,13 +177,66 @@ function NewModule(props) {
         console.log(xShow, yShow);
     }
 
+    function delSpot(e, spotInfo) {
+        if (e.button === 2) {
+            console.log(spotInfo.index);
+            let axisTemp = axis.filter((val, index, array) => {
+                return index !== spotInfo.index
+            })
+            changeAxis(axisTemp);
+            
+            infoOfPoints.map((val, index) => {
+                console.log("all: ", index);
+                console.log(val.x, ", ", spotInfo.x);
+                if(val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y) {
+                    console.log(index);
+                    console.log(infoOfPoints.filter((val, i, array) => {
+                        return i !== index;
+                    }));
+                    changeInfoOfPoints(infoOfPoints.filter((val, i, array) => {
+                        return i !== index;
+                    }));
+                    return;
+                }
+            });
+
+            return;
+        }
+    }
+
     function switchGroup() {     //選取完點按下確認後觸發
-        if (axis[axis.length - 1].group + 1 === group) {
+        if (axis[axis.length - 1].group === null && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
+            //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
+            postImg(0);
+            changeShowCanvas(false);
+            changeGroup(1);
+            changeTotalGroup(1);
+            return;
+        }
+
+
+        let isPointSpot = false;
+        axis.map((val, index) => {
+            console.log(group === 0);
+            if (val.group === group || group === 0) {
+                isPointSpot = true;
+                return;
+            }
+        });
+
+        if (!isPointSpot) {
             //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
             //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
             alert("請點選座標點");
             return;
         }
+
+        // if (axis[axis.length - 1].group + 1 === group) {
+        //     //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
+        //     //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
+        //     alert("請點選座標點");
+        //     return;
+        // }
         if (totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
             //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
             let fileNamePrompt = [];
@@ -186,14 +248,7 @@ function NewModule(props) {
             console.log('+++++++++++++++++++++++++++++++++++++');
             console.log(fileNamePrompt);
         }
-        if (axis[axis.length - 1].group === null && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
-            //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
-            postImg(0);
-            changeShowCanvas(false);
-            changeGroup(1);
-            changeTotalGroup(1);
-            return;
-        }
+
         setShowUploadBtn(true);
         if (axis[axis.length - 1].group >= totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
             postImg(axis[axis.length - 1].group);
@@ -214,6 +269,10 @@ function NewModule(props) {
         //console.log(URL.createObjectURL(file));
         console.log(file);
         drawTiffCanvas(file);
+    }
+
+    function delImg(groupNum) {
+        console.log(imageId[groupNum-1]);
     }
 
     function uploadFile(event) {
@@ -271,16 +330,31 @@ function NewModule(props) {
 
     function handlePointsInfo(info) {
         console.log(info);
-        if (infoOfPoints.length + 1 === info.group || info.id > infoOfPoints[infoOfPoints.length - 1].id) {
+        //val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y
+        let isAlreadyFilledInfo = false;
+        infoOfPoints.map((val, index) => {
+            if(val.group === info.group && val.x == info.x && val.y == info.y) {
+                isAlreadyFilledInfo = true;
+                return;
+            }
+        });
+
+        if (!isAlreadyFilledInfo) {
             //該點的資訊未被輸入過
             console.log('true');
             changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
             return;
         }
+        // if (infoOfPoints.length + 1 === info.group || info.id > infoOfPoints[infoOfPoints.length - 1].id) {
+        //     //該點的資訊未被輸入過
+        //     console.log('true');
+        //     changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
+        //     return;
+        // }
         let infoPrompt = infoOfPoints;
         for (let i = 0; i < infoPrompt.length; i++) {
             //該點的資訊曾被輸入過，更新該點的其他檢測物資訊
-            if (infoPrompt[i].id === info.id) {
+            if (infoPrompt[i].group === info.group && infoPrompt[i].x === info.x && infoPrompt[i].y === info.y) {
                 infoPrompt[i] = { ...infoOfPoints[i], [info.name]: parseInt(info.value) };
             }
         }
@@ -392,7 +466,7 @@ function NewModule(props) {
         </form>
 
         {Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 ?
-            <PrevPic key={index} group={index} onClick={showPrevPic} /> :
+            <PrevPic key={index} group={index} onClick={showPrevPic} delImg={delImg} /> :
             null)}
         {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
         <form id="upload-img-container" >   {/*style={{ display: modelId !== 0 ? "block" : "none" }} */}
@@ -401,12 +475,16 @@ function NewModule(props) {
             <input id="upload-img" type="file" onChange={uploadFile} multiple />
             {/* ref用來讓button操作input時有依據 */}
         </form>
-
+        <p className='hint' style={{ display: showCanvas ? 'block' : "none" }}>在點上點擊右鍵即可將點刪除</p>
         <div className="image-container" >
             <canvas className='tif-canvas' ref={canvasRef} width={canvasDim.width} height={canvasDim.height}
                 style={{ display: showCanvas ? 'block' : "none" }}
-                onClick={group !== 0 ? pointSpot : null} />
-            {axis.map((val, index) => index > 0 && val.group === group ? (<Spot key={index} axisX={val.xShow} axisY={val.yShow} show={showCanvas} />) : null)}
+                onMouseUp={group !== 0 ? pointSpot : null} />
+            {axis.map((val, index) => index > 0 && val.group === group ?
+                (<Spot key={index} index={index} group={val.group} axisX={val.xShow} axisY={val.yShow}
+                    x={val.x} y={val.y} show={showCanvas} onRightClick={delSpot} 
+                />)
+                : null)}
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
             <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
@@ -424,7 +502,8 @@ function NewModule(props) {
                 </thead>
                 <tbody>
                     {axis.map((val, index) => val.group !== null ?
-                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
+                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} 
+                            value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
                         null)
                     }
                 </tbody>

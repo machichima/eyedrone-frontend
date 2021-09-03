@@ -5,7 +5,11 @@ function Spot(props) {
     let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
     console.log(props.axisX);
     console.log(props.axisY);
-    return <div className="spot" style={{ top: props.axisY*currentH - 5, left: props.axisX*currentW - 5, display: props.show ? "inline" : "none" }} />
+    return <div className="spot" 
+                style={{ top: props.axisY*currentH - 5, left: props.axisX*currentW - 5, 
+                        display: props.show ? "inline" : "none" }} 
+                onMouseUp={(e)=>props.onRightClick(e, props)}
+            />
 }
 
 export default Spot;
