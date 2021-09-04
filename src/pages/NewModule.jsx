@@ -25,7 +25,7 @@ function NewModule(props) {
     var canvasRef = useRef(null);
     var [canvasDim, changeCanvasDim] = useState({ height: 0, width: 0 });
     const [infoOfPoints, changeInfoOfPoints] = useState([]);
-    const [streamTxt, changeStreamTxt] = useState("");
+    const [streamTxt, changeStreamTxt] = useState([]);
     const [isShowStream, changeIsShowStream] = useState(false);
     const [showUploadBtn, setShowUploadBtn] = useState(false);
 
@@ -155,6 +155,7 @@ function NewModule(props) {
         }
         try {
             const res = await axios.post("/api/images/", param, config);
+            console.log("sent image");
             console.log(res.data);
             changeImageId([...imageId, res.data.id]);
         } catch (e) {
@@ -184,11 +185,11 @@ function NewModule(props) {
                 return index !== spotInfo.index
             })
             changeAxis(axisTemp);
-            
+
             infoOfPoints.map((val, index) => {
                 console.log("all: ", index);
                 console.log(val.x, ", ", spotInfo.x);
-                if(val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y) {
+                if (val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y) {
                     console.log(index);
                     console.log(infoOfPoints.filter((val, i, array) => {
                         return i !== index;
@@ -251,6 +252,7 @@ function NewModule(props) {
 
         setShowUploadBtn(true);
         if (axis[axis.length - 1].group >= totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
+            console.log("new image");
             postImg(axis[axis.length - 1].group);
         }
         changeShowCanvas(false);
@@ -272,7 +274,44 @@ function NewModule(props) {
     }
 
     function delImg(groupNum) {
-        console.log(imageId[groupNum-1]);
+        if (groupNum - 1 === 0) {
+            alert("第一組圖片為panel，無法刪除!");
+            return;
+        }
+        // 要刪除的東西有: imageId, axis, pointInfo
+        changeImageId(imageId.filter((val, index) => {
+            return index !== groupNum - 1;
+        }));
+
+
+        let axisTemp = axis.filter((val, index) => {
+            return val.group !== groupNum - 1;
+        });
+        for (let i = 0; i < axisTemp.length; i++) {
+            if (axisTemp[i].group > groupNum - 1) {
+                axisTemp[i].group = axisTemp[i].group - 1;
+            }
+        }
+        changeAxis(axisTemp);
+
+        let infoOfPointsTemp = infoOfPoints.filter((val, index) => {
+            return val.group !== groupNum - 1;
+        });
+        for (let i = 0; i < infoOfPointsTemp.length; i++) {
+            if (infoOfPointsTemp[i].group > groupNum - 1) {
+                infoOfPointsTemp[i].group = infoOfPointsTemp[i].group - 1;
+            }
+        }
+        changeInfoOfPoints(infoOfPointsTemp);
+
+
+        changeFileName(fileName.filter((val, index) => {
+            return index !== groupNum - 1;
+        }))
+
+        changeGroup(group - 1);
+        changeTotalGroup(totalGroup - 1);
+        console.log(imageId[groupNum - 1]);
     }
 
     function uploadFile(event) {
@@ -333,7 +372,7 @@ function NewModule(props) {
         //val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y
         let isAlreadyFilledInfo = false;
         infoOfPoints.map((val, index) => {
-            if(val.group === info.group && val.x == info.x && val.y == info.y) {
+            if (val.group === info.group && val.x == info.x && val.y == info.y) {
                 isAlreadyFilledInfo = true;
                 return;
             }
@@ -426,18 +465,24 @@ function NewModule(props) {
                     return new ReadableStream({
                         async start(controller) {
                             changeIsShowStream(true);
+                            let streamTotalStr = [];
                             while (true) {
                                 const { done, value } = await reader.read();
 
                                 // When no more data needs to be consumed, break the reading
                                 if (done) {
                                     changeIsShowStream(false);
+                                    window.location.href = "/"
                                     break;
                                 }
                                 var enc = new TextDecoder("utf-8");
                                 const stringTxt = enc.decode(value).replace("<br>", "");
                                 console.log(stringTxt);
-                                changeStreamTxt(stringTxt);
+                                document.getElementById("popUp").innerHTML += "<p>"+stringTxt+"</p>";
+                                //streamTotalStr.push(stringTxt);
+                                // console.log(streamTotalStr);
+                                // changeStreamTxt(streamTotalStr);
+
                                 // Enqueue the next data chunk into our target stream
                                 controller.enqueue(value);
                             }
@@ -465,9 +510,10 @@ function NewModule(props) {
             {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
         </form>
 
-        {Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 ?
-            <PrevPic key={index} group={index} onClick={showPrevPic} delImg={delImg} /> :
+        {imageId.map((val, index) => index >= 0 ?
+            <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
             null)}
+        {/* Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 */}
         {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
         <form id="upload-img-container" >   {/*style={{ display: modelId !== 0 ? "block" : "none" }} */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
@@ -482,7 +528,7 @@ function NewModule(props) {
                 onMouseUp={group !== 0 ? pointSpot : null} />
             {axis.map((val, index) => index > 0 && val.group === group ?
                 (<Spot key={index} index={index} group={val.group} axisX={val.xShow} axisY={val.yShow}
-                    x={val.x} y={val.y} show={showCanvas} onRightClick={delSpot} 
+                    x={val.x} y={val.y} show={showCanvas} onRightClick={delSpot}
                 />)
                 : null)}
             {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
@@ -502,7 +548,7 @@ function NewModule(props) {
                 </thead>
                 <tbody>
                     {axis.map((val, index) => val.group !== null ?
-                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }} 
+                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
                             value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
                         null)
                     }
@@ -520,7 +566,10 @@ function NewModule(props) {
                 </button>
             </div>
         </div>
-        <StreamMesPopUp show={isShowStream} message={streamTxt} />
+        {/* <StreamMesPopUp show={isShowStream} message={streamTxt}  singleMsg={streamTxt[streamTxt.length-1]} /> */}
+        <div className="popUp-background" style={{display: isShowStream ? "block" : "none"}}>
+            <div className="popUp" id="popUp" style={{ textAlign: "start", overflowY: "scroll"}}></div>
+        </div>
     </div>
 }
 
