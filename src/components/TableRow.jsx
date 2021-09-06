@@ -4,22 +4,10 @@ import Tooltip from 'react-bootstrap/Tooltip'
 
 function TableRow(props) {
     const [isFirstRender, chIsFirstRender] = useState(true);
+    const [infos, chInfos] = useState([0, 0, 0, 0]);
 
-    try {
-        if(isFirstRender)   //避免多次 re-render
-        {
-            document.getElementsByName('do')[props.id].value = props.value.do;
-            document.getElementsByName('bod')[props.id].value = props.value.bod;
-            document.getElementsByName('ss')[props.id].value = props.value.ss;
-            document.getElementsByName('nh3n')[props.id].value = props.value.nh3n;
-            chIsFirstRender(false);
-        }
-    } catch {
-        
-    }
-
-    const [infos, chInfos] = useState([null, null, null, null]);
-
+    const [, updateState] = React.useState();
+    const forceUpdate = React.useCallback(() => updateState({}), []);
 
     function handleInfoOfPoints(e) {
         let infosDic = ['do', 'bod', 'ss', 'nh3n'];
@@ -28,7 +16,7 @@ function TableRow(props) {
         infosTemp[infosDic.indexOf(e.target.name)] = e.target.value;
         chInfos(infosTemp);
         console.log(infos);
-        props.onChange({id: props.id,value: e.target.value, name: e.target.name, x: props.spot.x, y: props.spot.y, group: props.spot.group});
+        props.onChange({ id: props.id, value: e.target.value, name: e.target.name, x: props.spot.x, y: props.spot.y, group: props.spot.group });
     }
 
     return <tr>
@@ -43,10 +31,10 @@ function TableRow(props) {
         >
             <td>{props.spot.group + 1}</td>
         </OverlayTrigger>
-        <td><input id="do" name='do' type='number' className='input-data' onChange={handleInfoOfPoints} /></td>
-        <td><input name='bod' type='number' className='input-data' onChange={handleInfoOfPoints} /></td>
-        <td><input name='ss' type='number' className='input-data' onChange={handleInfoOfPoints} /></td>
-        <td><input name='nh3n' type='number' className='input-data' onChange={handleInfoOfPoints} /></td>
+        <td><input id="do" name='do' type='number' className='input-data' onChange={handleInfoOfPoints} defaultValue={props.value.do} /></td>
+        <td><input name='bod' type='number' className='input-data' onChange={handleInfoOfPoints} defaultValue={props.value.bod} /></td>
+        <td><input name='ss' type='number' className='input-data' onChange={handleInfoOfPoints} defaultValue={props.value.ss} /></td>
+        <td><input name='nh3n' type='number' className='input-data' onChange={handleInfoOfPoints} defaultValue={props.value.nh3n} /></td>
     </tr>
 }
 

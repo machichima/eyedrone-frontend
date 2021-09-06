@@ -80,6 +80,8 @@ function NewModule(props) {
                 })
                 /////
 
+                changeGroup(allImgId.length);
+                changeTotalGroup(allImgId.length);
                 let axisTemp = [];
                 let infoOfPointsTemp = [];
 
@@ -184,7 +186,8 @@ function NewModule(props) {
             let axisTemp = axis.filter((val, index, array) => {
                 return index !== spotInfo.index
             })
-            changeAxis(axisTemp);
+            changeAxis([]);
+
 
             infoOfPoints.map((val, index) => {
                 console.log("all: ", index);
@@ -200,7 +203,7 @@ function NewModule(props) {
                     return;
                 }
             });
-
+            changeAxis(axisTemp);
             return;
         }
     }
@@ -478,7 +481,7 @@ function NewModule(props) {
                                 var enc = new TextDecoder("utf-8");
                                 const stringTxt = enc.decode(value).replace("<br>", "");
                                 console.log(stringTxt);
-                                document.getElementById("popUp").innerHTML += "<p>"+stringTxt+"</p>";
+                                document.getElementById("popUp").innerHTML += "<p>" + stringTxt + "</p>";
                                 //streamTotalStr.push(stringTxt);
                                 // console.log(streamTotalStr);
                                 // changeStreamTxt(streamTotalStr);
@@ -525,7 +528,7 @@ function NewModule(props) {
         <div className="image-container" >
             <canvas className='tif-canvas' ref={canvasRef} width={canvasDim.width} height={canvasDim.height}
                 style={{ display: showCanvas ? 'block' : "none" }}
-                onMouseUp={group !== 0 ? pointSpot : null} />
+                onMouseUp={imageId.length > 1 ? pointSpot : null} />
             {axis.map((val, index) => index > 0 && val.group === group ?
                 (<Spot key={index} index={index} group={val.group} axisX={val.xShow} axisY={val.yShow}
                     x={val.x} y={val.y} show={showCanvas} onRightClick={delSpot}
@@ -547,10 +550,17 @@ function NewModule(props) {
                     </tr>
                 </thead>
                 <tbody>
-                    {axis.map((val, index) => val.group !== null ?
-                        <TableRow key={index} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
-                            value={infoOfPoints[index]} onChange={handlePointsInfo} /> :
-                        null)
+                    {axis.map((val, index) =>
+                        val.group !== null ?
+                            id != null ?
+                                (infoOfPoints.length > index) ?
+                                    <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
+                                        value={infoOfPoints[index]} onChange={handlePointsInfo} />
+                                    : <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
+                                        value={[null, null, null, null]} onChange={handlePointsInfo} />
+                                : <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
+                                    value={[null, null, null, null]} onChange={handlePointsInfo} />
+                            : null)
                     }
                 </tbody>
             </Table>
@@ -567,8 +577,8 @@ function NewModule(props) {
             </div>
         </div>
         {/* <StreamMesPopUp show={isShowStream} message={streamTxt}  singleMsg={streamTxt[streamTxt.length-1]} /> */}
-        <div className="popUp-background" style={{display: isShowStream ? "block" : "none"}}>
-            <div className="popUp" id="popUp" style={{ textAlign: "start", overflowY: "scroll"}}></div>
+        <div className="popUp-background" style={{ display: isShowStream ? "block" : "none" }}>
+            <div className="popUp" id="popUp" style={{ textAlign: "start", overflowY: "scroll" }}></div>
         </div>
     </div>
 }

@@ -21,12 +21,33 @@ function NewPredict() {
     const [totalGroup, changeTotalGroup] = useState(0);    //總共的圖片組數
     const [showUploadBtn, setShowUploadBtn] = useState(false);
 
+    let url = new URL(window.location.href);
+    let id = url.searchParams.get("id");
+
     React.useEffect(() => {
         window.addEventListener('load', async () => {
             const res = await axios.get('/api/models/');
             let data = [];
             chAllModel(res.data);
             console.log(res.data);
+
+            if (id != null) {
+                const res_predictData = await axios.get('/api/predicts/' + id);
+                chModelId(res_predictData.data.model);
+                let allImgId = [];
+                allImgId.push(res_predictData.data.panel.id);
+                res_predictData.data.images.map((val, index) => {
+                    if (!allImgId.includes(val)) {
+                        allImgId.push(val);
+                    }
+                });
+                changeImageId(allImgId);
+                changeTotalGroup(allImgId.length);
+
+                let dateTime = res_predictData.data.created_at;
+                setPredictDate(dateTime.split('T')[0]);
+                setPredictTime(dateTime.split('T')[1].slice(0, -1));
+            }
         });
     });
 
@@ -191,17 +212,38 @@ function NewPredict() {
         changeShowCanvas(true);
     }
 
+    function delImg(groupNum) {
+        if (groupNum - 1 === 0) {
+            alert("第一組圖片為panel，無法刪除!");
+            return;
+        }
+        // 要刪除的東西有: imageId
+        changeImageId(imageId.filter((val, index) => {
+            return index !== groupNum - 1;
+        }));
+
+        changeFileName(fileName.filter((val, index) => {
+            return index !== groupNum - 1;
+        }))
+
+        changeGroup(group - 1);
+        changeTotalGroup(totalGroup - 1);
+        console.log(imageId[groupNum - 1]);
+    }
+
     async function postPredict() {
         let imageIdList = [];
-        for(let i = 1; i < modelId.length; i++) {
+        for (let i = 1; i < modelId.length; i++) {
             imageIdList.push(imageId[i]);
         }
         console.log(imageIdList);
         // console.log({ model: modelId, created_at: predictDate+"T"+predictTime+":00Z", panel: imageId[0],
         // images: [imageIdList]});
-        const res = await axios.post("/api/predicts/", 
-            { model: modelId, created_at: predictDate+"T"+predictTime+":00Z", panel: imageId[0],
-                images: imageIdList});
+        const res = await axios.post("/api/predicts/",
+            {
+                model: modelId, created_at: predictDate + "T" + predictTime + ":00Z", panel: imageId[0],
+                images: imageIdList
+            });
         console.log(res);
     }
 
@@ -214,12 +256,18 @@ function NewPredict() {
             <label style={{ marginLeft: '10px' }}>時間: </label>
             <input type="time" name="name" id="model-name" value={predictTime} onChange={handlePredictTime} required></input>
             <label style={{ marginLeft: '10px' }}>選擇模型: </label>
-            <select onChange={(e)=>{chModelId(e.target.value)}}>
-                {allModel != null ? allModel.map((val, index)=> <option value={val.id}>{val.name}</option>) : null}
+            <select onChange={(e) => { chModelId(e.target.value) }}>
+                {allModel != null ? allModel.map((val, index) => {
+                    if (val.id === modelId) {
+                        return <option value={val.id} selected>{val.name}</option>
+                    }
+                    return <option value={val.id}>{val.name}</option>
+                })
+                    : null}
             </select>
         </form>
-        {Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 ?
-            <PrevPic key={index} group={index} onClick={showPrevPic} /> :
+        {imageId.map((val, index) => index >= 0 ?
+            <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
             null)}
         <form id="upload-img-container">   {/* */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
@@ -235,7 +283,7 @@ function NewPredict() {
         </div>
         <div className='center-button'>
             <button className='upload-button' style={{ display: (fileName.length !== 0 && showUploadBtn === true) ? 'inline-block' : 'none' }}
-                    onClick={postPredict}>
+                onClick={postPredict}>
                 上傳
             </button>
         </div>

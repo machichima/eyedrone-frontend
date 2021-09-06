@@ -103,7 +103,8 @@ function AllModuleAndPredict(props) {
                                     /> : null
         }
         {
-            cliPreCardId != 0 ? <PredictInfoPopUp created_at={predictData[cliPreCardId-1].created_at} 
+            cliPreCardId != 0 ? <PredictInfoPopUp id={predictData[cliPreCardId-1].id}
+                                    created_at={predictData[cliPreCardId-1].created_at} 
                                     results={predictData[cliPreCardId-1].results}
                                     onClick={getPredictClickedCard}
                                     /> : null
