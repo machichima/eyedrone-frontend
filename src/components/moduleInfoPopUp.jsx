@@ -3,6 +3,8 @@ import ProgressBar from "./ProgressBar";
 import Table from 'react-bootstrap/Table'
 import '../popUp.css';
 import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import axios from "../components/axios";
 
 
 
@@ -13,7 +15,7 @@ function useOutsideAlerter(ref, props) {
          */
         function handleClickOutside(event) {
             if (ref.current && !ref.current.contains(event.target)) {
-                props.onClick(0);
+                props.onClick(null);
             }
         }
 
@@ -30,9 +32,20 @@ function ModuleInfoPopUp(props) {
     const wrapperRef = useRef(null);
     useOutsideAlerter(wrapperRef, props);
 
+    async function delModel() {
+        try {
+            let res = await axios.delete('/api/models/' + props.id);
+            console.log(res);
+            window.location.reload();
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
     return <div className="popUp-background">
         <div className="popUp" style={{ textAlign: "start", overflowY: "scroll"}} ref={wrapperRef}>
-            <EditIcon style={{float: "right", margin: "20px"}} onClick={()=>{window.location.href="/newModule?id="+props.id}}/>
+            <DeleteIcon style={{float: "right", margin: "20px"}} onClick={delModel}/>
+            <EditIcon style={{float: "right", margin: "20px 5px"}} onClick={()=>{window.location.href="/newModule?id="+props.id}}/>
             <div style={{ margin: "20px" }}>
                 <h2 style={{ fontWeight: "700" }}>{props.modelName}</h2>
                 {props.substances.map((val, index) => {

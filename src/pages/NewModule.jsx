@@ -17,7 +17,7 @@ function NewModule(props) {
     const [modelId, changeModelId] = useState(0);
     const [imageId, changeImageId] = useState([]);
     var [fileName, changeFileName] = useState([]);
-    var [axis, changeAxis] = useState([{ x: null, y: null, xShow: null, yShow: null, group: null }]);
+    var [axis, changeAxis] = useState([]);
     //每組圖片的座標點
     const [group, changeGroup] = useState(0);    //顯示的圖片組數
     const [totalGroup, changeTotalGroup] = useState(0);    //總共的圖片組數
@@ -82,7 +82,7 @@ function NewModule(props) {
 
                 changeGroup(allImgId.length);
                 changeTotalGroup(allImgId.length);
-                let axisTemp = [];
+                let axisTemp = axis;
                 let infoOfPointsTemp = [];
 
                 res.data.points.map((val, index) => {
@@ -209,7 +209,7 @@ function NewModule(props) {
     }
 
     function switchGroup() {     //選取完點按下確認後觸發
-        if (axis[axis.length - 1].group === null && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
+        if (axis.length < 1 && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
             //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
             postImg(0);
             changeShowCanvas(false);
@@ -411,7 +411,7 @@ function NewModule(props) {
         console.log(totalGroup);
         let infoList = [];
         let notFillAllInfo = false;
-        for (let i = 0; i < axis.length - 1; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
+        for (let i = 0; i < axis.length; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
             let infoPrompt = new Map();
             infoPrompt = infoOfPoints[i];
             let sizeOfMap = 0;
@@ -528,8 +528,8 @@ function NewModule(props) {
         <div className="image-container" >
             <canvas className='tif-canvas' ref={canvasRef} width={canvasDim.width} height={canvasDim.height}
                 style={{ display: showCanvas ? 'block' : "none" }}
-                onMouseUp={imageId.length > 1 ? pointSpot : null} />
-            {axis.map((val, index) => index > 0 && val.group === group ?
+                onMouseUp={imageId.length > 0 ? pointSpot : null} />
+            {axis.map((val, index) => val.group === group ?
                 (<Spot key={index} index={index} group={val.group} axisX={val.xShow} axisY={val.yShow}
                     x={val.x} y={val.y} show={showCanvas} onRightClick={delSpot}
                 />)

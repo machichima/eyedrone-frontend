@@ -2,8 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 function NavigatorBar(props) {
-    return <div>
-        <header>
+    return <div style={{width: "100%"}}>
+        <header style={{width: "100%"}}>
             <h1>Eyedrone</h1>
             {props.linkTo !== "null" ?
                     <button className="show-data" onClick={()=>{window.location.href = "/";}}>

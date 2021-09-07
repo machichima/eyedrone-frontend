@@ -13,7 +13,7 @@ function useOutsideAlerter(ref, props) {
          */
         function handleClickOutside(event) {
             if (ref.current && !ref.current.contains(event.target)) {
-                props.onClick(0);
+                props.onClick(null);
             }
         }
 
@@ -60,7 +60,7 @@ function PredictInfoPopUp(props) {
             <div style={{ margin: "20px" }}>
                 <h2 style={{ fontWeight: "700" }}>{props.created_at.split('T')[0]} {props.created_at.split('T')[1].slice(0, -1)}</h2>
                 {props.results.map((val, index) => {
-                    return <div>
+                    return <div key={index}>
                         <h4 style={{ marginLeft: "0px" }}>{val.image}</h4>
                         {Object.entries(val).map(([key, value]) => {
                             return key !== "image" && value !== null ?

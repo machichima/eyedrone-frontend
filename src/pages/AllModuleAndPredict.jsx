@@ -29,8 +29,8 @@ function AllModuleAndPredict(props) {
 
     const [modelData, changeModelData] = useState();
     const [predictData, chPredictData] = useState();
-    const [clickedCardId, chclickedCardId] = useState(0);
-    const [cliPreCardId, chCliPreCardId] = useState(0);
+    const [cliModelCardIndex, chcliModelCardIndex] = useState(null);
+    const [cliPreCardIndex, chcliPreCardIndex] = useState(null);
 
 
     React.useEffect(() => {
@@ -44,8 +44,13 @@ function AllModuleAndPredict(props) {
                 let data = [];
                 let predictDataTemp = []
                 console.log(res);
-                for (let i = 1; i <= res.data.length; i++) {
-                    const res_id = await axios.get('/api/models/' + i);
+                for (let i = res.data[0].id; i <= res.data.length; i++) {
+                    let res_id;
+                    try{
+                        res_id = await axios.get('/api/models/' + i);
+                    } catch {
+                        continue;
+                    }
                     data.push(res_id.data);
                 }
                 console.log(data);
@@ -54,13 +59,15 @@ function AllModuleAndPredict(props) {
         }
     });
 
-    function getClickedCard(id) {
-        console.log(id);
-        chclickedCardId(id);
+    function getClickedCard(index) {
+        chcliModelCardIndex(index);
     }
 
-    function getPredictClickedCard(id) {
-        chCliPreCardId(id);
+    function getPredictClickedCard(index) {
+        console.log("predict clicked id: ");
+        console.log(index);
+        console.log("predict clicked /// ");
+        chcliPreCardIndex(index);
     }
 
     return <div>
@@ -75,9 +82,8 @@ function AllModuleAndPredict(props) {
                 {/* </Link> */}
             </div>
             <div style={card_container}>
-                {modelData != null ? modelData.map((val, index) => val.group !== null ?
-                    <Cards key={2*index} id={val.id} name={val.name} onClick={getClickedCard} /> :
-                    null) : null}
+                {modelData != null ? modelData.map((val, index) => 
+                    <Cards key={2*index} index={index} id={val.id} name={val.name} onClick={getClickedCard} />) : null}
 
             </div>
             <hr />
@@ -91,24 +97,25 @@ function AllModuleAndPredict(props) {
             </div>
             <div style={card_container}>
                 {predictData != null ? predictData.map((val, index) => 
-                    <Cards key={2*index + 1} id={val.id} dateTime={val.created_at} onClick={getPredictClickedCard}/>
+                    <Cards key={2*index + 1} index={index} id={val.id} dateTime={val.created_at} onClick={getPredictClickedCard}/>
                 ) : null}
             </div>
-        </div>
+        </div> 
         {
-            clickedCardId != 0 ? <ModuleInfoPopUp id={modelData[clickedCardId-1].id}
-                                    modelName={modelData[clickedCardId-1].name} 
-                                    substances={modelData[clickedCardId-1].substances} 
+            cliModelCardIndex != null ? <ModuleInfoPopUp id={modelData[cliModelCardIndex].id}
+                                    modelName={modelData[cliModelCardIndex].name} 
+                                    substances={modelData[cliModelCardIndex].substances} 
                                     onClick={getClickedCard}
                                     /> : null
         }
         {
-            cliPreCardId != 0 ? <PredictInfoPopUp id={predictData[cliPreCardId-1].id}
-                                    created_at={predictData[cliPreCardId-1].created_at} 
-                                    results={predictData[cliPreCardId-1].results}
+            cliPreCardIndex != null ? <PredictInfoPopUp id={predictData[cliPreCardIndex].id}
+                                    created_at={predictData[cliPreCardIndex].created_at} 
+                                    results={predictData[cliPreCardIndex].results}
                                     onClick={getPredictClickedCard}
                                     /> : null
         }
+        <br></br>
         
     </div>
 
