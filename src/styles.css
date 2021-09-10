@@ -191,6 +191,13 @@ p {
     position: relative;
     text-align: center;
 }
+
+.model-name:focus {
+    border: none;
+    resize: none;
+    outline: none;
+}
+
 .card-table {
     display: table;
     text-align: center;

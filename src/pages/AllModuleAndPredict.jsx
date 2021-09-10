@@ -44,6 +44,7 @@ function AllModuleAndPredict(props) {
                 let data = [];
                 let predictDataTemp = []
                 console.log(res);
+                if(res.data.length < 1) return;
                 for (let i = res.data[0].id; i <= res.data.length; i++) {
                     let res_id;
                     try{
