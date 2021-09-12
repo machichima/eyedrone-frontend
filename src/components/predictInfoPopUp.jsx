@@ -64,7 +64,7 @@ function PredictInfoPopUp(props) {
                         <h4 style={{ marginLeft: "0px" }}>{val.image}</h4>
                         {Object.entries(val).map(([key, value]) => {
                             return key !== "image" && value !== null ?
-                                <div><img style={{ objectFit: "contain", width: "100%", height: "100%" }} src={value}></img></div> : null
+                                <div key={value}><img style={{ objectFit: "contain", width: "100%", height: "100%" }} src={value}></img></div> : null
                         })}
                     </div>
                 })}

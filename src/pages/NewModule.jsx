@@ -22,8 +22,9 @@ function NewModule(props) {
     //每組圖片的座標點
     const [group, changeGroup] = useState(0);    //顯示的圖片組數
     const [totalGroup, changeTotalGroup] = useState(0);    //總共的圖片組數
-    const [showCanvas, changeShowCanvas] = useState(true);    //是否顯示圖片讓使用者標點
-    const [currDim, chCurrDim] = useState({width: 0, height: 0});
+    const [showCanvas, changeShowCanvas] = useState(false);    //是否顯示圖片讓使用者標點
+    const [currDim, chCurrDim] = useState({ width: 0, height: 0 });
+    const [isUploadingImg, chIsUploadingImg] = useState(false);
 
     var canvasRef = useRef(null);
     var [canvasDim, changeCanvasDim] = useState({ height: 0, width: 0 });
@@ -57,30 +58,45 @@ function NewModule(props) {
             window.addEventListener('load', async () => {
                 const res = await axios.get('/api/models/' + id);
                 const resImg = await axios.get('/api/images/');
-                console.log(res.data);
-                console.log(resImg.data);
+                const resPanel = await axios.get('/api/panels/');
+                console.log("models: ", res.data);
+                console.log("images: ", resImg.data);
+                console.log("panels: ", resPanel.data);
                 chModelDataForEdit(res.data);
                 changeModelName(res.data.name);
 
                 // 可能之後會改
                 let allImgId = [];
-                allImgId.push(res.data.panel.id);
                 res.data.points.map((val, index) => {
                     if (!allImgId.includes(val.image)) {
                         allImgId.push(val.image);
                     }
                 });
+
+                let panelImg = 0;
+                resImg.data.map((val, index) => {
+                    if (allImgId.includes(val.id)) {
+                        panelImg = val.panel;
+                        return;
+                    }
+                });
+                if (panelImg !== 0) allImgId = [panelImg, ...allImgId];
+                console.log("allImgId: ", allImgId);
                 changeImageId(allImgId);
                 changeTotalGroup(allImgId.length);
+
+                let previewImgUrlTemp = []
                 allImgId.map((val, index) => {
-                    let fileNameTemp = [];
-                    Object.entries(resImg.data[val - 1]).map(([key, value]) => {
-                        if (key !== "id" && value !== null) {
-                            fileNameTemp.push(value)
-                        }
-                    })
-                    changeFileName(...fileName, fileNameTemp);
-                })
+                    if (index === 0) {
+                        previewImgUrlTemp = [...previewImgUrlTemp, resPanel.data[val - 1].preview];
+                        console.log(resPanel.data[val - 1].preview);
+                    } else {
+                        previewImgUrlTemp = [...previewImgUrlTemp, resImg.data[val - 1].rgb];
+
+                    }
+                });
+
+                chPreviewImgUrl(previewImgUrlTemp);
                 /////
 
                 changeGroup(allImgId.length);
@@ -88,26 +104,46 @@ function NewModule(props) {
                 let axisTemp = axis;
                 let infoOfPointsTemp = [];
 
-                res.data.points.map((val, index) => {
-                    let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
-                    let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
-                    let [x, y] = [val.x, val.y];
-                    let [xShow, yShow] = [Math.round(val.x / canvasDim.width * currentW), Math.round(val.y / canvasDim.height * currentH)];
-                    let group = allImgId.indexOf(val.image);
-                    axisTemp = [...axisTemp, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group);
-                    // changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
+                let img = new Image();
+                img.src = previewImgUrlTemp[1];
+                img.addEventListener("load", function () {
+                    res.data.points.map((val, index) => {
+                        let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
+                        let currentH = currentW * this.height / this.width;
 
-                    let infoPrompt = { id: index, group: group, x: x, y: y };
-                    Object.entries(val).map(([key, value]) => {
-                        if (key !== "image" && key !== "x" && key !== "y" && value !== null) {
-                            infoPrompt = { ...infoPrompt, [key]: parseInt(value) }
-                        }
-                    })
-                    infoOfPointsTemp = [...infoOfPointsTemp, infoPrompt];
-                    // changeInfoOfPoints([...infoOfPoints, infoPrompt]);
+                        chCurrDim({ width: currentW, height: currentH });
+                        console.log("currwidth: ", this.width, "height:", this.height);
+
+                        let [x, y] = [val.x, val.y];
+
+                        let group;
+                        allImgId.map((imgVal, imgIndex) => {
+                            if (imgIndex > 0) {
+                                if (imgVal === val.image) {
+                                    console.log("index: ", imgIndex);
+                                    group = imgIndex;
+                                }
+                            }
+                        })
+
+                        let [xShow, yShow] = [val.x / this.naturalWidth, val.y / this.naturalHeight];
+                        axisTemp = [...axisTemp, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group);
+                        // changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
+
+                        let infoPrompt = { id: index, group: group, x: x, y: y };
+                        Object.entries(val).map(([key, value]) => {
+                            if (key !== "image" && key !== "x" && key !== "y" && value !== null) {
+                                infoPrompt = { ...infoPrompt, [key]: parseInt(value) }
+                            }
+                        })
+                        infoOfPointsTemp = [...infoOfPointsTemp, infoPrompt];
+                        // changeInfoOfPoints([...infoOfPoints, infoPrompt]);
+                    });
+                    console.log("axisTemp: ", axisTemp);
+                    changeAxis(axisTemp);
+                    changeInfoOfPoints(infoOfPointsTemp);
                 });
-                changeAxis(axisTemp);
-                changeInfoOfPoints(infoOfPointsTemp);
+                setShowUploadBtn(true);
             });
         }
 
@@ -117,7 +153,7 @@ function NewModule(props) {
             let axisPrompt = axis;
             let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
             let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
-            chCurrDim({width: currentW, height: currentH});
+            chCurrDim({ width: currentW, height: currentH });
             for (let i = 0; i < axis.lengthl; i++) {
                 let [xShow, yShow] = [Math.round(axis[i].x / canvasDim.width * currentW), Math.round(axis[i].y / canvasDim.height * currentH)]
                 axisPrompt[i].xShow = xShow;
@@ -133,7 +169,7 @@ function NewModule(props) {
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    })
+    }, []);
 
 
 
@@ -171,8 +207,15 @@ function NewModule(props) {
                 console.log(res.data.preview);
                 chPreviewImgUrl([...previewImgUrl, res.data.preview]);
             } else {
+                chIsUploadingImg(true);
                 const res = await axios.post("/api/images/", param, config);
+                if (res.data) {
+                    chIsUploadingImg(false);
+                    changeShowCanvas(true);
+                }
                 console.log(res.data);
+                changeGroup(imageId.length);
+                changeTotalGroup(imageId.length);
                 changeImageId([...imageId, res.data.id]);
                 console.log(res.data.rgb);
                 chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
@@ -192,7 +235,7 @@ function NewModule(props) {
 
         let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
         let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
-        chCurrDim({width: currentW, height: currentH});
+        chCurrDim({ width: currentW, height: currentH });
         let img = document.querySelector('#imgShow');
         let [x, y] = [Math.round(e.nativeEvent.offsetX / currentW * img.naturalWidth), Math.round(e.nativeEvent.offsetY / currentH * img.naturalHeight)];
         let [xShow, yShow] = [e.nativeEvent.offsetX / currentW, e.nativeEvent.offsetY / currentH];
@@ -231,6 +274,7 @@ function NewModule(props) {
     }
 
     function switchGroup() {     //選取完點按下確認後觸發
+        console.log("group: ", group);
         if (axis.length < 1 && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
             //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
             //postImg(0);
@@ -249,7 +293,7 @@ function NewModule(props) {
             }
         });
 
-        if(group === 0) {
+        if (group === 0) {
             changeShowCanvas(false);
             return;
         }
@@ -285,21 +329,22 @@ function NewModule(props) {
             //postImg(axis[axis.length - 1].group);
         }
         changeShowCanvas(false);
-        changeGroup(axis[axis.length - 1].group + 1);
-        changeTotalGroup(axis[axis.length - 1].group + 1);
+        changeGroup(imageId.length);
+        changeTotalGroup(imageId.length);
         console.log(group);
         console.log(axis);
         console.log(fileName);
     }
 
     function showPrevPic(groupNum) {     //按下先前編輯的圖片組
+        setShowUploadBtn(false);
         changeShowCanvas(true);
         changeGroup(groupNum - 1);
         console.log(groupNum);
-        let file = fileName[groupNum - 1][0];
+        //let file = fileName[groupNum - 1][0];
 
         //console.log(URL.createObjectURL(file));
-        console.log(file);
+
         //drawTiffCanvas(file);
     }
 
@@ -313,6 +358,9 @@ function NewModule(props) {
             return index !== groupNum - 1;
         }));
 
+        changeImageId(imageId.filter((val, index) => {
+            return index !== groupNum - 1;
+        }));
 
         let axisTemp = axis.filter((val, index) => {
             return val.group !== groupNum - 1;
@@ -438,6 +486,9 @@ function NewModule(props) {
         console.log(totalGroup);
         let infoList = [];
         let notFillAllInfo = false;
+
+        if (modelName.length < 1) notFillAllInfo = true;
+
         for (let i = 0; i < axis.length; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
             let infoPrompt = new Map();
             infoPrompt = infoOfPoints[i];
@@ -469,11 +520,11 @@ function NewModule(props) {
             //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
             let id_for_build = 0;
             if (id != null) {
-                const res_point = await axios.put(`/api/models/${id}/`, { name: modelName, panel: imageId[0], points: infoList });
+                const res_point = await axios.put(`/api/models/${id}/`, { name: modelName, points: infoList });
                 id_for_build = id;
                 console.log(res_point.data);
             } else {
-                const res = await axios.post("/api/models/", { name: modelName, points: infoList})
+                const res = await axios.post("/api/models/", { name: modelName, points: infoList })
                 console.log(res.data.id);
                 id_for_build = res.data.id;
                 //const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName,  });
@@ -545,19 +596,25 @@ function NewModule(props) {
             null)}
         {/* Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 */}
         {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
+        <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
         <form id="upload-img-container" >   {/*style={{ display: modelId !== 0 ? "block" : "none" }} */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
             {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={uploadFile} multiple />
+            <input id="upload-img" type="file" onChange={uploadFile} multiple disabled={isUploadingImg ? true : false} />
             {/* ref用來讓button操作input時有依據 */}
         </form>
         <p className='hint' style={{ display: showCanvas ? 'block' : "none" }}>在點上點擊右鍵即可將點刪除</p>
-        <div className="image-container" style={{ display: showCanvas ? 'block' : "none"}}>
-            <img id="imgShow" src={previewImgUrl[group]} style={{ objectFit: "contain", width: "100%", height: "100%"}}
-                onMouseUp={imageId.length > 1 ? pointSpot : null} />
+        <div className="image-container">
+            <img id="imgShow" src={previewImgUrl[group]} style={{
+                objectFit: "contain", width: "100%", height: "100%",
+                display: showCanvas ? 'block' : "none"
+            }}
+                onMouseUp={group > 0 ? pointSpot : null} />
             {axis.map((val, index) => val.group === group ?
-                (<Spot key={val.group+val.xShow+val.yShow} index={index} group={val.group} 
-                    axisX={val.xShow*currDim.width} axisY={val.yShow*currDim.height} x={val.x} y={val.y} 
+                (<Spot key={val.group + val.xShow + val.yShow} index={index} group={val.group}
+                    axisX={val.xShow * currDim.width}
+                    axisY={val.yShow * currDim.height}
+                    x={val.x} y={val.y}
                     show={showCanvas} onRightClick={delSpot}
                 />)
                 : null)}
@@ -594,10 +651,8 @@ function NewModule(props) {
             <div className='center-button'>
                 <button className='upload-button' style={{
                     display:
-                        (imageId.length > 1 && showUploadBtn === true) || id != null ?
-                            'inline-block' : 'inline-block'
-                }}
-                    onClick={postModelAndPutInfo}>
+                    (showUploadBtn === true) ? 'inline-block' : 'none'
+                }} onClick={postModelAndPutInfo}>
                     {/* postModelAndPutInfo */}
                     上傳
                 </button>

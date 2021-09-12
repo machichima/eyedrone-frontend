@@ -8,18 +8,22 @@ import axios from "../components/axios";
 
 
 function NewPredict() {
-    const [modelId, chModelId] = useState(0);
+    const [modelId, chModelId] = useState(1);
     const [allModel, chAllModel] = useState();
     const [imageId, changeImageId] = useState([]);
     const [predictDate, setPredictDate] = useState('');
     const [predictTime, setPredictTime] = useState('');
     var canvasRef = useRef(null);
     var [canvasDim, changeCanvasDim] = useState({ height: 0, width: 0 });
+    const [previewImgUrl, chPreviewImgUrl] = useState([]);
     var [fileName, changeFileName] = useState([]);
-    const [showCanvas, changeShowCanvas] = useState(true);    //是否顯示圖片讓使用者標點
+    const [showCanvas, changeShowCanvas] = useState(false);    //是否顯示圖片讓使用者標點
     const [group, changeGroup] = useState(0);    //顯示的圖片組數
     const [totalGroup, changeTotalGroup] = useState(0);    //總共的圖片組數
     const [showUploadBtn, setShowUploadBtn] = useState(false);
+
+    const [isUploadingImg, chIsUploadingImg] = useState(false);
+    const [isUploadingPre, chIsUploadingPre] = useState(false);
 
     let url = new URL(window.location.href);
     let id = url.searchParams.get("id");
@@ -27,26 +31,52 @@ function NewPredict() {
     React.useEffect(() => {
         window.addEventListener('load', async () => {
             const res = await axios.get('/api/models/');
+            const resImg = await axios.get('/api/images/');
+            const resPanel = await axios.get('/api/panels/');
             let data = [];
             chAllModel(res.data);
             console.log(res.data);
-
+            console.log("images: ", resImg.data);
+            console.log("panels: ", resPanel.data);
             if (id != null) {
                 const res_predictData = await axios.get('/api/predicts/' + id);
                 chModelId(res_predictData.data.model);
                 let allImgId = [];
-                allImgId.push(res_predictData.data.panel.id);
                 res_predictData.data.images.map((val, index) => {
                     if (!allImgId.includes(val)) {
                         allImgId.push(val);
                     }
                 });
+                let panelImg = 0;
+                resImg.data.map((val, index) => {
+                    if (allImgId.includes(val.id)) {
+                        panelImg = val.panel;
+                        return;
+                    }
+                });
+                if(panelImg !== 0) allImgId = [panelImg, ...allImgId];
+
+                console.log("all image id: ", allImgId);
                 changeImageId(allImgId);
                 changeTotalGroup(allImgId.length);
+
+                let previewImgUrlTemp = []
+                allImgId.map((val, index) => {
+                    if (index === 0) {
+                        previewImgUrlTemp = [...previewImgUrlTemp, resPanel.data[val - 1].preview];
+                        console.log(resPanel.data[val - 1].preview);
+                    } else {
+                        previewImgUrlTemp = [...previewImgUrlTemp, resImg.data[val - 1].rgb];
+
+                    }
+                });
+
+                chPreviewImgUrl(previewImgUrlTemp);
 
                 let dateTime = res_predictData.data.created_at;
                 setPredictDate(dateTime.split('T')[0]);
                 setPredictTime(dateTime.split('T')[1].slice(0, -1));
+                setShowUploadBtn(true);
             }
         });
     });
@@ -82,31 +112,10 @@ function NewPredict() {
             console.log(file.name);
             // fileNameTemp.push(URL.createObjectURL(event.target.files[i]))
             fileNameTemp.push(event.target.files[i]);
-            if (i === 0) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    var buffer = e.target.result;
-                    console.log('--------------------------------------');
-                    console.log(buffer);
-                    var tiff = new Tiff({ buffer: buffer });
-                    var canvas = tiff.toCanvas();
-                    if (canvas) {
-                        //document.querySelector('#output').append(canvas);
-                        const [width, height] = [canvas.width, canvas.height]
-                        changeCanvasDim({ width, height });
-                        var canvasTemp = canvasRef.current;
-                        const context = canvasTemp.getContext('2d');
-                        context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-                    }
-                    // The file's text will be printed here
-                };
-                reader.readAsArrayBuffer(file);
-                changeShowCanvas(true);
-            }
         }
         //changeTotalGroup(totalGroup + 1);
         //console.log("total group", totalGroup);
+        postImg(fileNameTemp, imageId.length);
         changeFileName([...fileName, fileNameTemp].sort((a, b) => {
             if (a.name < b.name) {
                 return -1;
@@ -132,13 +141,13 @@ function NewPredict() {
             console.log('+++++++++++++++++++++++++++++++++++++');
             console.log(fileNamePrompt);
         }
+        console.log("totalGroup: ", totalGroup);
         if (totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
             //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
-            postImg(0);
+            //postImg(0);
             changeShowCanvas(false);
             changeGroup(1);
             changeTotalGroup(1);
-            console.log(showUploadBtn);
             return;
         }
         setShowUploadBtn(true);
@@ -146,37 +155,62 @@ function NewPredict() {
         console.log("total group", totalGroup);
         if (fileName.length > totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
             //postImg(axis[axis.length - 1].group);
-            postImg(group);
+            //postImg(group);
         }
         changeShowCanvas(false);
-        changeGroup(fileName.length);
-        changeTotalGroup(fileName.length);
+        changeGroup(imageId.length);
+        changeTotalGroup(imageId.length);
         console.log(group);
         console.log(fileName);
     }
 
-    const postImg = async (groupNum) => {    //post multiple image to backend
+    const postImg = async (fileNameTemp, imageIdLen) => {    //post multiple image to backend
+        setShowUploadBtn(false);
         //Step 1:取得state數據
         //Step 2:新增到JSON-Server數據庫中 
         console.log('----------------------------------');
-        console.log(fileName[fileName.length - 1]);
+        console.log(fileNameTemp);
         let param = new FormData();  // 创建form对象
         //param.append('model', modelId);  // 通过append向form对象添加数据
         //param.append('is_panel', (groupNum === 0) ? true : false);
-        param.append('blue', fileName[fileName.length - 1][0]);
-        param.append('green', fileName[fileName.length - 1][1]);
-        param.append('red', fileName[fileName.length - 1][2]);
-        param.append('nir', fileName[fileName.length - 1][3]);
-        param.append('red_edge', fileName[fileName.length - 1][4]);
+        if (imageIdLen >= 1) {
+            param.append('panel', imageId[0]);
+        }
+        param.append('blue', fileNameTemp[0]);
+        param.append('green', fileNameTemp[1]);
+        param.append('red', fileNameTemp[2]);
+        param.append('nir', fileNameTemp[3]);
+        param.append('red_edge', fileNameTemp[4]);
         const config = {
             headers: {
-                'content-type': 'multipart/form-data'
-            }
+                'content-type': 'multipart/form-data',
+            },
+            timeout: 60000
         }
         try {
-            const res = await axios.post("/api/images/", param, config);
-            console.log(res.data);
-            changeImageId([...imageId, res.data.id]);
+            if (imageIdLen < 1) {
+                const res = await axios.post("/api/panels/", param, config);
+                console.log(res.data);
+                changeImageId([...imageId, res.data.id]);
+                console.log(res.data.preview);
+                chPreviewImgUrl([...previewImgUrl, res.data.preview]);
+            } else {
+                chIsUploadingImg(true);
+                setShowUploadBtn(false);
+                const res = await axios.post("/api/images/", param, config);
+                if (res.data) {
+                    chIsUploadingImg(false);
+                    changeShowCanvas(true);
+                }
+                console.log(res.data);
+                changeTotalGroup(imageId.length);
+                changeGroup(imageId.length);
+                changeImageId([...imageId, res.data.id]);
+                console.log(res.data.rgb);
+                chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
+            }
+            console.log("sent image");
+
         } catch (e) {
             console.log(e)
         }
@@ -187,28 +221,6 @@ function NewPredict() {
         setShowUploadBtn(false);
         changeGroup(groupNum - 1);
         console.log(groupNum);
-        let file = fileName[groupNum - 1][0];
-        console.log(URL.createObjectURL(file));
-        console.log(file);
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
-            var buffer = e.target.result;
-            console.log('--------------------------------------');
-            console.log(buffer);
-            var tiff = new Tiff({ buffer: buffer });
-            var canvas = tiff.toCanvas();
-            if (canvas) {
-                //document.querySelector('#output').append(canvas);
-                const [width, height] = [canvas.width, canvas.height]
-                changeCanvasDim({ width, height });
-                var canvasTemp = canvasRef.current;
-                const context = canvasTemp.getContext('2d');
-                context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-            }
-            // The file's text will be printed here
-        };
-        reader.readAsArrayBuffer(file);
         changeShowCanvas(true);
     }
 
@@ -217,12 +229,12 @@ function NewPredict() {
             alert("第一組圖片為panel，無法刪除!");
             return;
         }
-        // 要刪除的東西有: imageId
+        // 要刪除的東西有: imageId, 
         changeImageId(imageId.filter((val, index) => {
             return index !== groupNum - 1;
         }));
 
-        changeFileName(fileName.filter((val, index) => {
+        chPreviewImgUrl(previewImgUrl.filter((val, index) => {
             return index !== groupNum - 1;
         }))
 
@@ -232,19 +244,27 @@ function NewPredict() {
     }
 
     async function postPredict() {
+        if(predictDate.length < 1 || predictTime < 1) {
+            alert("請確認 日期 或 時間 是否為空?");
+            return;
+        }
+        chIsUploadingPre(true);
         let imageIdList = [];
-        for (let i = 1; i < modelId.length; i++) {
+        for (let i = 1; i < imageId.length; i++) {
             imageIdList.push(imageId[i]);
         }
         console.log(imageIdList);
-        // console.log({ model: modelId, created_at: predictDate+"T"+predictTime+":00Z", panel: imageId[0],
-        // images: [imageIdList]});
+        console.log({ model: modelId, created_at: predictDate+"T"+predictTime+":00Z",
+        images: [imageIdList]});
         const res = await axios.post("/api/predicts/",
             {
-                model: modelId, created_at: predictDate + "T" + predictTime + ":00Z", panel: imageId[0],
+                model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
                 images: imageIdList
-            });
-        console.log(res);
+            }, {timeout: 20000});
+        if(res) {
+            chIsUploadingPre(false);
+            window.location.href="/";
+        }
     }
 
     return <div>
@@ -256,12 +276,12 @@ function NewPredict() {
             <label style={{ marginLeft: '10px' }}>時間: </label>
             <input type="time" name="name" id="model-name" value={predictTime} onChange={handlePredictTime} required></input>
             <label style={{ marginLeft: '10px' }}>選擇模型: </label>
-            <select onChange={(e) => { chModelId(e.target.value) }}>
+            <select value={modelId} onChange={(e) => { chModelId(e.target.value); console.log(e.target.value) }}>
                 {allModel != null ? allModel.map((val, index) => {
                     if (val.id === modelId) {
-                        return <option value={val.id} selected>{val.name}</option>
+                        return <option key={val.id} value={val.id}>{val.name}</option>
                     }
-                    return <option value={val.id}>{val.name}</option>
+                    return <option key={val.id} value={val.id}>{val.name}</option>
                 })
                     : null}
             </select>
@@ -269,23 +289,32 @@ function NewPredict() {
         {imageId.map((val, index) => index >= 0 ?
             <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
             null)}
+        <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
         <form id="upload-img-container">   {/* */}
             {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
             {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={uploadFile} multiple />
+            <input id="upload-img" type="file" onChange={uploadFile} multiple
+                disabled={isUploadingImg ? true : false} />
             {/* ref用來讓button操作input時有依據 */}
         </form>
 
         <div className="image-container" >
-            <canvas className='tif-canvas' ref={canvasRef} width={canvasDim.width} height={canvasDim.height}
-                style={{ display: showCanvas ? 'block' : "none" }} />
-            <button className='button' style={{ display: showCanvas && canvasDim.height !== 0 ? "block" : "none" }} onClick={switchGroup}>確認</button>
+            <img id="imgShow" src={previewImgUrl[group]} style={{
+                objectFit: "contain", width: "100%", height: "100%",
+                display: showCanvas ? 'block' : "none"
+            }} />
+            <button className='button' style={{ display: showCanvas ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
+        <br/>
         <div className='center-button'>
-            <button className='upload-button' style={{ display: (fileName.length !== 0 && showUploadBtn === true) ? 'inline-block' : 'none' }}
+            <button className='upload-button' style={{ display: (showUploadBtn === true) ? 'inline-block' : 'none' }}
                 onClick={postPredict}>
+                {/* postPredict */}
                 上傳
             </button>
+        </div>
+        <div className="popUp-background" style={{ display: isUploadingPre ? "block" : "none" }}>
+            <div className="popUp" id="popUp" style={{ textAlign: "center", padding: "20px" }}>上傳預測資料中...</div>
         </div>
     </div>
 
