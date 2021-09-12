@@ -33,6 +33,7 @@ function ModuleInfoPopUp(props) {
     useOutsideAlerter(wrapperRef, props);
 
     async function delModel() {
+        if(!window.confirm("確定要刪除該模型?")) return;
         try {
             let res = await axios.delete('/api/models/' + props.id);
             console.log(res);
