@@ -299,10 +299,12 @@ function NewPredict() {
         </form>
 
         <div className="image-container" >
-            <img id="imgShow" src={previewImgUrl[group]} style={{
-                objectFit: "contain", width: "100%", height: "100%",
-                display: showCanvas ? 'block' : "none"
-            }} />
+            <img id="imgShow" src={previewImgUrl[group]} 
+                style={{
+                    objectFit: "contain", width: "100%", height: "100%",
+                    display: showCanvas ? 'block' : "none"
+                }} 
+            />
             <button className='button' style={{ display: showCanvas ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
         <br/>
