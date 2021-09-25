@@ -23,7 +23,7 @@ function NewPredict() {
     const [showUploadBtn, setShowUploadBtn] = useState(false);
     const [panelName, chPanelName] = useState('');
     const [allPanel, chAllPanel] = useState([]);
-    const [panelId, chPanelId] = useState(0);
+    const [panelId, chPanelId] = useState(1);
 
     const [isUploadingImg, chIsUploadingImg] = useState(false);
     const [isUploadingPre, chIsUploadingPre] = useState(false);
