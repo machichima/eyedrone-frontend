@@ -21,6 +21,15 @@ background: #888;
 background: #555;
 }
 
+select:disabled {
+    opacity: 30%;
+}
+input:disabled {
+    opacity: 30%;
+}
+button:disabled {
+    opacity: 30%;
+}
 /* Nevigator bar */
 header{
     box-sizing: border-box;
@@ -52,6 +61,12 @@ header button {
     text-align: center;
     margin-top: 30px;
 }
+
+.upload-img-form-container {
+    margin: 20px auto;
+    width: 70%;
+}
+
 .model-name-form {
     display: flex;
     flex-direction: row;
@@ -64,10 +79,16 @@ header button {
     margin: 0 0 0 10px;
     border-radius: 10px;
 }
+
+#panel-name {
+    margin: 0 0 0 0;
+    border-radius: 10px;
+}
+
 .previous-grouop {
     display: block;
     margin: 10px auto;
-    width: 70%;
+    /* width: 70%; */
     height: 25px;
     border-radius: 10px;
     background-color: #52616B;
@@ -83,7 +104,7 @@ header button {
     flex-direction: row;
     justify-content: start;
     align-items: center;
-    width: 70%;
+    /* width: 70%; */
     border: #52616B solid 2px;
     border-radius: 10px;
     box-sizing: border-box;
@@ -156,6 +177,15 @@ p {
     border-radius: 10px;
     margin: 20px 0 50px 0;
 }
+
+.normal-button {
+    background-color: #52616B;
+    color: #fff;
+    border-radius: 10px;
+    margin-left: 20px;
+}
+
+
 .handle-table {
     width: 70vw;
     margin: 0px auto 50px auto;
@@ -166,7 +196,6 @@ p {
     border-bottom: 2px solid #52616B;
     background-color: rgba(0, 0, 0, 0);
 }
-
 /* ------------------------------------------- */
 /* AllModuleAndPredict */
 .new-model-button {

@@ -21,6 +21,9 @@ function NewPredict() {
     const [group, changeGroup] = useState(0);    //顯示的圖片組數
     const [totalGroup, changeTotalGroup] = useState(0);    //總共的圖片組數
     const [showUploadBtn, setShowUploadBtn] = useState(false);
+    const [panelName, chPanelName] = useState('');
+    const [allPanel, chAllPanel] = useState([]);
+    const [panelId, chPanelId] = useState(0);
 
     const [isUploadingImg, chIsUploadingImg] = useState(false);
     const [isUploadingPre, chIsUploadingPre] = useState(false);
@@ -35,6 +38,7 @@ function NewPredict() {
             const resPanel = await axios.get('/api/panels/');
             let data = [];
             chAllModel(res.data);
+            chAllPanel(resPanel.data);
             console.log(res.data);
             console.log("images: ", resImg.data);
             console.log("panels: ", resPanel.data);
@@ -54,7 +58,10 @@ function NewPredict() {
                         return;
                     }
                 });
-                if(panelImg !== 0) allImgId = [panelImg, ...allImgId];
+                if (panelImg !== 0) {
+                    allImgId = [panelImg, ...allImgId];
+                    chPanelId(panelImg);
+                }
 
                 console.log("all image id: ", allImgId);
                 changeImageId(allImgId);
@@ -87,6 +94,17 @@ function NewPredict() {
 
     function handlePredictTime(e) {
         setPredictTime(e.target.value);
+    }
+
+    function handlePanelName(e) {
+        chPanelName(e.target.value);
+    }
+
+    function selectPanel() {
+        if(window.confirm("按下確認後則無法再變更所選擇的panel, 是否選擇該panel?")) {
+            changeImageId([panelId]);
+            chPreviewImgUrl(['']);
+        }
     }
 
     function postPredict() {
@@ -244,7 +262,7 @@ function NewPredict() {
     }
 
     async function postPredict() {
-        if(predictDate.length < 1 || predictTime < 1) {
+        if (predictDate.length < 1 || predictTime < 1) {
             alert("請確認 日期 或 時間 是否為空?");
             return;
         }
@@ -254,16 +272,18 @@ function NewPredict() {
             imageIdList.push(imageId[i]);
         }
         console.log(imageIdList);
-        console.log({ model: modelId, created_at: predictDate+"T"+predictTime+":00Z",
-        images: [imageIdList]});
+        console.log({
+            model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
+            images: [imageIdList]
+        });
         const res = await axios.post("/api/predicts/",
             {
                 model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
                 images: imageIdList
-            }, {timeout: 20000});
-        if(res) {
+            }, { timeout: 20000 });
+        if (res) {
             chIsUploadingPre(false);
-            window.location.href="/";
+            window.location.href = "/";
         }
     }
 
@@ -286,28 +306,71 @@ function NewPredict() {
                     : null}
             </select>
         </form>
-        {imageId.map((val, index) => index >= 0 ?
-            <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
-            null)}
-        <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
-        <form id="upload-img-container">   {/* */}
-            {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
-            {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={uploadFile} multiple
-                disabled={isUploadingImg ? true : false} />
-            {/* ref用來讓button操作input時有依據 */}
-        </form>
+
+        <div className='upload-img-form-container'>
+            <h5 className='upload-img-form-label'>上傳panel: (panel只可上傳一次)</h5>
+            <form>
+                <label style={{marginRight: "10px", marginTop: "20px"}}>選擇已上傳的panel:</label>
+                <select value={panelId} disabled={imageId.length > 0 ? true : false}
+                    onChange={(e) => { chPanelId(e.target.value); console.log(e.target.value) }}>
+                    {allPanel != null ? allPanel.map((val, index) => {
+                        if (val.id === panelId) {
+                            return <option key={val.id} value={val.id}>{val.id}</option>
+                        }
+                        return <option key={val.id} value={val.id}>{val.id}</option>
+                    })
+                        : null}
+                </select>
+                <button type='button' className='normal-button' onClick={selectPanel}
+                        disabled={imageId.length > 0 ? true : false}>
+                            確認
+                </button>
+                <br />
+                <p>or</p>
+
+                <label>panel名稱: </label>
+                <br />
+                <input type="text" name="name" id="panel-name" value={panelName} onChange={handlePanelName}
+                        disabled={imageId.length > 0 ? true : false} />
+            </form>
+            <br />
+            <form id="upload-img-container">   {/* */}
+                {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
+                {/* <p>{fileName.toString()}</p> */}
+                <input id="upload-img" type="file" onChange={uploadFile} multiple
+                    disabled={imageId.length > 0 ? true : false} />
+                {/* ref用來讓button操作input時有依據 */}
+            </form>
+        </div>
+        <hr />
+
+        <div className='upload-img-form-container'>
+            <h5 className='upload-img-form-label'>上傳images: </h5>
+
+            {imageId.map((val, index) => index > 0 ?
+                <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
+                null)}
+            <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
+
+            <form id="upload-img-container">   {/* */}
+                {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
+                {/* <p>{fileName.toString()}</p> */}
+                <input id="upload-img" type="file" onChange={uploadFile} multiple
+                    disabled={isUploadingImg || imageId.length < 1 ? true : false} />
+                {/* ref用來讓button操作input時有依據 */}
+            </form>
+        </div>
 
         <div className="image-container" >
-            <img id="imgShow" src={previewImgUrl[group]} 
+            <img id="imgShow" src={previewImgUrl[group]}
                 style={{
                     objectFit: "contain", width: "100%", height: "100%",
                     display: showCanvas ? 'block' : "none"
-                }} 
+                }}
             />
             <button className='button' style={{ display: showCanvas ? "block" : "none" }} onClick={switchGroup}>確認</button>
         </div>
-        <br/>
+        <br />
         <div className='center-button'>
             <button className='upload-button' style={{ display: (showUploadBtn === true) ? 'inline-block' : 'none' }}
                 onClick={postPredict}>
