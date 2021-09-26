@@ -133,6 +133,8 @@ function PredictInfoPopUp(props) {
                                 chProductJSON(JSON.parse(Httpreq.response));
                             }
                             return key !== "image" && key !== "product" && value !== null ?
+                            <div>
+                                <h4 style={{ marginLeft: "0px" }}>{key}</h4>
                                 <div key={value} style={{ "marginBottom": "10px", position: "relative" }}>
                                     <img
                                         id={key}
@@ -144,7 +146,8 @@ function PredictInfoPopUp(props) {
                                         onMouseLeave={hideToolTip}>
                                     </img>
                                     <span className="valtooltip" id={"valtooltip" + key} style={toolTipStyle}></span>
-                                </div> : null
+                                </div>
+                            </div> : null
                         })}
                     </div>
                 })}
