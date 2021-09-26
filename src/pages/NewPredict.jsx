@@ -101,7 +101,7 @@ function NewPredict() {
     }
 
     function selectPanel() {
-        if(window.confirm("按下確認後則無法再變更所選擇的panel, 是否選擇該panel?")) {
+        if (window.confirm("按下確認後則無法再變更所選擇的panel, 是否選擇該panel?")) {
             changeImageId([panelId]);
             chPreviewImgUrl(['']);
         }
@@ -207,25 +207,36 @@ function NewPredict() {
         }
         try {
             if (imageIdLen < 1) {
-                const res = await axios.post("/api/panels/", param, config);
-                console.log(res.data);
-                changeImageId([...imageId, res.data.id]);
-                console.log(res.data.preview);
-                chPreviewImgUrl([...previewImgUrl, res.data.preview]);
+                fetch(`http://127.0.0.1:8000/api/panels/`,
+                    {
+                        method: 'POST',
+                        body: param,
+                    }).then(response => response.json())
+                    .then(json => {
+                        console.log(json);
+                        changeImageId([...imageId, json.id]);
+                        console.log(json.preview);
+                        chPreviewImgUrl([...previewImgUrl, json.preview]);
+                    });
+
             } else {
                 chIsUploadingImg(true);
                 setShowUploadBtn(false);
-                const res = await axios.post("/api/images/", param, config);
-                if (res.data) {
-                    chIsUploadingImg(false);
-                    changeShowCanvas(true);
-                }
-                console.log(res.data);
-                changeTotalGroup(imageId.length);
-                changeGroup(imageId.length);
-                changeImageId([...imageId, res.data.id]);
-                console.log(res.data.rgb);
-                chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
+                fetch(`http://127.0.0.1:8000/api/images/`,
+                    {
+                        method: 'POST',
+                        body: param,
+                    }).then(response => response.json())
+                    .then(json => {
+                        chIsUploadingImg(false);
+                        changeShowCanvas(true);
+                        console.log(json);
+                        changeTotalGroup(imageId.length);
+                        changeGroup(imageId.length);
+                        changeImageId([...imageId, json.id]);
+                        console.log(json.rgb);
+                        chPreviewImgUrl([...previewImgUrl, json.rgb]);
+                    });
             }
             console.log("sent image");
 
@@ -276,15 +287,47 @@ function NewPredict() {
             model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
             images: [imageIdList]
         });
-        const res = await axios.post("/api/predicts/",
+        const response = await fetch(`http://127.0.0.1:8000/api/predicts/`,
             {
-                model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
-                images: imageIdList
-            }, { timeout: 20000 });
-        if (res) {
+                method: 'POST',
+                body: JSON.stringify({
+                    model: modelId,
+                    created_at: predictDate + "T" + predictTime + ":00Z",
+                    images: imageIdList
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        const responseText = await response.json();
+        console.log(responseText); // logs 'OK'
+        if (responseText) {
             chIsUploadingPre(false);
             window.location.href = "/";
         }
+        
+        // fetch(`http://127.0.0.1:8000/api/predicts/`,
+        //     {
+        //         method: 'POST',
+        //         body: JSON.stringify({
+        //             model: modelId, 
+        //             created_at: predictDate + "T" + predictTime + ":00Z",
+        //             images: imageIdList
+        //         }),
+        //     }).then(response => {
+        //         chIsUploadingPre(false);
+        //         window.location.href = "/";
+        //     });
+
+        // const res = await axios.post("/api/predicts/",
+        //     {
+        //         model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
+        //         images: imageIdList
+        //     }, { timeout: 20000 });
+        // if (res) {
+        //     chIsUploadingPre(false);
+        //     window.location.href = "/";
+        // }
     }
 
     return <div>
@@ -310,7 +353,7 @@ function NewPredict() {
         <div className='upload-img-form-container'>
             <h5 className='upload-img-form-label'>上傳panel: (panel只可上傳一次)</h5>
             <form>
-                <label style={{marginRight: "10px", marginTop: "20px"}}>選擇已上傳的panel:</label>
+                <label style={{ marginRight: "10px", marginTop: "20px" }}>選擇已上傳的panel:</label>
                 <select value={panelId} disabled={imageId.length > 0 ? true : false}
                     onChange={(e) => { chPanelId(e.target.value); console.log(e.target.value) }}>
                     {allPanel != null ? allPanel.map((val, index) => {
@@ -322,8 +365,8 @@ function NewPredict() {
                         : null}
                 </select>
                 <button type='button' className='normal-button' onClick={selectPanel}
-                        disabled={imageId.length > 0 ? true : false}>
-                            確認
+                    disabled={imageId.length > 0 ? true : false}>
+                    確認
                 </button>
                 <br />
                 <p>or</p>
@@ -331,7 +374,7 @@ function NewPredict() {
                 <label>panel名稱: </label>
                 <br />
                 <input type="text" name="name" id="panel-name" value={panelName} onChange={handlePanelName}
-                        disabled={imageId.length > 0 ? true : false} />
+                    disabled={imageId.length > 0 ? true : false} />
             </form>
             <br />
             <form id="upload-img-container">   {/* */}

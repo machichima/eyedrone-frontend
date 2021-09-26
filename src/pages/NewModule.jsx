@@ -155,7 +155,7 @@ function NewModule(props) {
                 setShowUploadBtn(true);
             }
         });
-    
+
 
         function handleResize() {
             console.log(props.location.pathname);
@@ -174,567 +174,593 @@ function NewModule(props) {
         }
 
         if (props.location.pathname === '/newModule') {
-        window.addEventListener('resize', handleResize);
-    }
-    return () => {
-        window.removeEventListener('resize', handleResize);
-    };
-}, []);
-
-
-
-function handleModelName(e) {
-    changeModelName(e.target.value);
-}
-
-function handlePanelName(e) {
-    chPanelName(e.target.value);
-}
-
-function selectPanel() {
-    if (window.confirm("按下確認後則無法再變更所選擇的panel, 是否選擇該panel?")) {
-        changeImageId([panelId]);
-        chPreviewImgUrl(['']);
-    }
-}
-
-const postImg = async (fileNameTemp, imageIdLen) => {    //post multiple image to backend
-    //Step 1:取得state數據
-    //Step 2:新增到JSON-Server數據庫中 
-    console.log('----------------------------------');
-    console.log(fileNameTemp);
-    let param = new FormData();  // 创建form对象
-    //param.append('model', modelId);  // 通过append向form对象添加数据
-    //param.append('is_panel', (groupNum === 0) ? true : false);
-    if (imageIdLen >= 1) {
-        param.append('panel', imageId[0]);
-    }
-    param.append('blue', fileNameTemp[0]);
-    param.append('green', fileNameTemp[1]);
-    param.append('red', fileNameTemp[2]);
-    param.append('nir', fileNameTemp[3]);
-    param.append('red_edge', fileNameTemp[4]);
-    const config = {
-        headers: {
-            'content-type': 'multipart/form-data',
-        },
-        timeout: 60000,
-    }
-    try {
-        if (imageIdLen < 1) {
-            const res = await axios.post("/api/panels/", param, config);
-            console.log(res.data);
-            changeImageId([...imageId, res.data.id]);
-            console.log(res.data.preview);
-            chPreviewImgUrl([...previewImgUrl, res.data.preview]);
-        } else {
-            chIsUploadingImg(true);
-            const res = await axios.post("/api/images/", param, config);
-            if (res.data) {
-                chIsUploadingImg(false);
-                changeShowCanvas(true);
-            }
-            console.log(res.data);
-            changeGroup(imageId.length);
-            changeTotalGroup(imageId.length);
-            changeImageId([...imageId, res.data.id]);
-            console.log(res.data.rgb);
-            chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
+            window.addEventListener('resize', handleResize);
         }
-        console.log("sent image");
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
 
-    } catch (e) {
-        console.log(e)
+
+
+    function handleModelName(e) {
+        changeModelName(e.target.value);
     }
 
-}
-
-function pointSpot(e) {     //當點擊圖片時取得滑鼠的點(滑鼠在圖片上的座標點，在圖片坐標系)
-    if (e.button === 2) {
-        return;
+    function handlePanelName(e) {
+        chPanelName(e.target.value);
     }
 
-    let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
-    let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
-    chCurrDim({ width: currentW, height: currentH });
-    let img = document.querySelector('#imgShow');
-    let [x, y] = [Math.round(e.nativeEvent.offsetX / currentW * img.naturalWidth), Math.round(e.nativeEvent.offsetY / currentH * img.naturalHeight)];
-    let [xShow, yShow] = [e.nativeEvent.offsetX / currentW, e.nativeEvent.offsetY / currentH];
-    changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
-    console.log(x, y);
-    console.log(xShow, yShow);
-    console.log(currentW, currentH);
-}
+    function selectPanel() {
+        if (window.confirm("按下確認後則無法再變更所選擇的panel, 是否選擇該panel?")) {
+            changeImageId([panelId]);
+            chPreviewImgUrl(['']);
+        }
+    }
 
-function delSpot(e, spotInfo) {
-    if (e.button === 2) {
-        console.log(spotInfo.index);
-        let axisTemp = axis.filter((val, index, array) => {
-            return index !== spotInfo.index
-        })
-        changeAxis([]);
+    const postImg = async (fileNameTemp, imageIdLen) => {    //post multiple image to backend
+        //Step 1:取得state數據
+        //Step 2:新增到JSON-Server數據庫中 
+        console.log('----------------------------------');
+        console.log(fileNameTemp);
+        let param = new FormData();  // 创建form对象
+        //param.append('model', modelId);  // 通过append向form对象添加数据
+        //param.append('is_panel', (groupNum === 0) ? true : false);
+        if (imageIdLen >= 1) {
+            param.append('panel', imageId[0]);
+        }
+        param.append('blue', fileNameTemp[0]);
+        param.append('green', fileNameTemp[1]);
+        param.append('red', fileNameTemp[2]);
+        param.append('nir', fileNameTemp[3]);
+        param.append('red_edge', fileNameTemp[4]);
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data',
+            },
+            timeout: 60000,
+        }
+        try {
+            if (imageIdLen < 1) {
+                fetch(`http://127.0.0.1:8000/api/panels/`,
+                    {
+                        method: 'POST',
+                        body: param,
+                    }).then(response => response.json())
+                    .then(json => {
+                        console.log(json);
+                        changeImageId([...imageId, json.id]);
+                        console.log(json.preview);
+                        chPreviewImgUrl([...previewImgUrl, json.preview]);
+                    });
+                // const res = await axios.post("/api/panels/", param, config);
+                // console.log(res.data);
+                // changeImageId([...imageId, res.data.id]);
+                // console.log(res.data.preview);
+                // chPreviewImgUrl([...previewImgUrl, res.data.preview]);
+            } else {
+                chIsUploadingImg(true);
+                fetch(`http://127.0.0.1:8000/api/images/`,
+                    {
+                        method: 'POST',
+                        body: param,
+                    }).then(response => response.json())
+                    .then(json => {
+                        chIsUploadingImg(false);
+                        changeShowCanvas(true);
+                        console.log(json);
+                        changeGroup(imageId.length);
+                        changeTotalGroup(imageId.length);
+                        changeImageId([...imageId, json.id]);
+                        console.log(json.rgb);
+                        chPreviewImgUrl([...previewImgUrl, json.rgb]);
+                    });
+                // const res = await axios.post("/api/images/", param, config);
+                // if (res.data) {
+                //     chIsUploadingImg(false);
+                //     changeShowCanvas(true);
+                // }
+                // console.log(res.data);
+                // changeGroup(imageId.length);
+                // changeTotalGroup(imageId.length);
+                // changeImageId([...imageId, res.data.id]);
+                // console.log(res.data.rgb);
+                // chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
+            }
+            console.log("sent image");
+
+        } catch (e) {
+            console.log(e)
+        }
+
+    }
+
+    function pointSpot(e) {     //當點擊圖片時取得滑鼠的點(滑鼠在圖片上的座標點，在圖片坐標系)
+        if (e.button === 2) {
+            return;
+        }
+
+        let currentW = document.querySelector('.image-container').offsetWidth;    //canvas外的container的width
+        let currentH = document.querySelector('.image-container').offsetHeight;   //canvas外的container的height
+        chCurrDim({ width: currentW, height: currentH });
+        let img = document.querySelector('#imgShow');
+        let [x, y] = [Math.round(e.nativeEvent.offsetX / currentW * img.naturalWidth), Math.round(e.nativeEvent.offsetY / currentH * img.naturalHeight)];
+        let [xShow, yShow] = [e.nativeEvent.offsetX / currentW, e.nativeEvent.offsetY / currentH];
+        changeAxis([...axis, { x, y, xShow, yShow, group }].sort((a, b) => a.group - b.group));
+        console.log(x, y);
+        console.log(xShow, yShow);
+        console.log(currentW, currentH);
+    }
+
+    function delSpot(e, spotInfo) {
+        if (e.button === 2) {
+            console.log(spotInfo.index);
+            let axisTemp = axis.filter((val, index, array) => {
+                return index !== spotInfo.index
+            })
+            changeAxis([]);
 
 
-        infoOfPoints.map((val, index) => {
-            console.log("all: ", index);
-            console.log(val.x, ", ", spotInfo.x);
-            if (val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y) {
-                console.log(index);
-                console.log(infoOfPoints.filter((val, i, array) => {
-                    return i !== index;
-                }));
-                changeInfoOfPoints(infoOfPoints.filter((val, i, array) => {
-                    return i !== index;
-                }));
+            infoOfPoints.map((val, index) => {
+                console.log("all: ", index);
+                console.log(val.x, ", ", spotInfo.x);
+                if (val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y) {
+                    console.log(index);
+                    console.log(infoOfPoints.filter((val, i, array) => {
+                        return i !== index;
+                    }));
+                    changeInfoOfPoints(infoOfPoints.filter((val, i, array) => {
+                        return i !== index;
+                    }));
+                    return;
+                }
+            });
+            changeAxis(axisTemp);
+            return;
+        }
+    }
+
+    function switchGroup() {     //選取完點按下確認後觸發
+        console.log("group: ", group);
+        if (axis.length < 1 && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
+            //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
+            //postImg(0);
+            changeShowCanvas(false);
+            changeGroup(1);
+            changeTotalGroup(1);
+            return;
+        }
+
+        let isPointSpot = false;
+        axis.map((val, index) => {
+            console.log(group === 0);
+            if (val.group === group) {
+                isPointSpot = true;
                 return;
             }
         });
-        changeAxis(axisTemp);
-        return;
-    }
-}
 
-function switchGroup() {     //選取完點按下確認後觸發
-    console.log("group: ", group);
-    if (axis.length < 1 && totalGroup === 0) {   //新增第一組圖片，直接將group和totalGroup令為1
-        //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
-        //postImg(0);
-        changeShowCanvas(false);
-        changeGroup(1);
-        changeTotalGroup(1);
-        return;
-    }
-
-    let isPointSpot = false;
-    axis.map((val, index) => {
-        console.log(group === 0);
-        if (val.group === group) {
-            isPointSpot = true;
+        if (group === 0) {
+            changeShowCanvas(false);
             return;
         }
-    });
 
-    if (group === 0) {
-        changeShowCanvas(false);
-        return;
-    }
-
-    if (!isPointSpot) {
-        //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
-        //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
-        alert("請點選座標點");
-        return;
-    }
-
-    // if (axis[axis.length - 1].group + 1 === group) {
-    //     //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
-    //     //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
-    //     alert("請點選座標點");
-    //     return;
-    // }
-    if (totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
-        //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
-        let fileNamePrompt = [];
-        for (let i = 0; i < totalGroup; i++) {
-            fileNamePrompt.push(fileName[i]);
+        if (!isPointSpot) {
+            //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
+            //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
+            alert("請點選座標點");
+            return;
         }
-        fileNamePrompt.push(fileName[fileName.length - 1]);
-        changeFileName(fileNamePrompt);
-        console.log('+++++++++++++++++++++++++++++++++++++');
-        console.log(fileNamePrompt);
-    }
 
-    setShowUploadBtn(true);
-    if (axis[axis.length - 1].group >= totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
-        console.log("new image");
-        //postImg(axis[axis.length - 1].group);
-    }
-    changeShowCanvas(false);
-    changeGroup(imageId.length);
-    changeTotalGroup(imageId.length);
-    console.log(group);
-    console.log(axis);
-    console.log(fileName);
-}
-
-function showPrevPic(groupNum) {     //按下先前編輯的圖片組
-    setShowUploadBtn(false);
-    changeShowCanvas(true);
-    changeGroup(groupNum - 1);
-    console.log(groupNum);
-    //let file = fileName[groupNum - 1][0];
-
-    //console.log(URL.createObjectURL(file));
-
-    //drawTiffCanvas(file);
-}
-
-function delImg(groupNum) {
-    if (groupNum - 1 === 0) {
-        alert("第一組圖片為panel，無法刪除!");
-        return;
-    }
-    // 要刪除的東西有: imageId, axis, pointInfo
-    changeImageId(imageId.filter((val, index) => {
-        return index !== groupNum - 1;
-    }));
-
-    changeImageId(imageId.filter((val, index) => {
-        return index !== groupNum - 1;
-    }));
-
-    let axisTemp = axis.filter((val, index) => {
-        return val.group !== groupNum - 1;
-    });
-    for (let i = 0; i < axisTemp.length; i++) {
-        if (axisTemp[i].group > groupNum - 1) {
-            axisTemp[i].group = axisTemp[i].group - 1;
-        }
-    }
-    changeAxis(axisTemp);
-
-    let infoOfPointsTemp = infoOfPoints.filter((val, index) => {
-        return val.group !== groupNum - 1;
-    });
-    for (let i = 0; i < infoOfPointsTemp.length; i++) {
-        if (infoOfPointsTemp[i].group > groupNum - 1) {
-            infoOfPointsTemp[i].group = infoOfPointsTemp[i].group - 1;
-        }
-    }
-    changeInfoOfPoints(infoOfPointsTemp);
-
-
-    changeFileName(fileName.filter((val, index) => {
-        return index !== groupNum - 1;
-    }))
-
-    changeGroup(group - 1);
-    changeTotalGroup(totalGroup - 1);
-    console.log(imageId[groupNum - 1]);
-}
-
-function uploadFile(event) {
-    if (event.target.files.length !== 5) {
-        alert('請上傳五張圖片');
-        return;
-    }
-    let fileNameTemp = [];   //先將fileName內的都清空
-    for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
-        let file = event.target.files[i];
-        console.log(window.URL.createObjectURL(file));
-        console.log(file.name);
-        fileNameTemp.push(event.target.files[i]);
-        // if (i === 0) {
-        //     drawTiffCanvas(file);
+        // if (axis[axis.length - 1].group + 1 === group) {
+        //     //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
+        //     //若為第一組圖片，則未選擇座標點時axis[axis.length - 1].group初始值為null
+        //     alert("請點選座標點");
+        //     return;
         // }
+        if (totalGroup + 1 < fileName.length) { //代表使用者在未點擊確認的情況下就再按一次選擇檔案
+            //totalGroup從零開始，由於State異步更新，所以totalGroup需要加一才會為實際組數
+            let fileNamePrompt = [];
+            for (let i = 0; i < totalGroup; i++) {
+                fileNamePrompt.push(fileName[i]);
+            }
+            fileNamePrompt.push(fileName[fileName.length - 1]);
+            changeFileName(fileNamePrompt);
+            console.log('+++++++++++++++++++++++++++++++++++++');
+            console.log(fileNamePrompt);
+        }
+
+        setShowUploadBtn(true);
+        if (axis[axis.length - 1].group >= totalGroup) {   //代表新增一組圖片，而不是去編輯原本建立的圖片組
+            console.log("new image");
+            //postImg(axis[axis.length - 1].group);
+        }
+        changeShowCanvas(false);
+        changeGroup(imageId.length);
+        changeTotalGroup(imageId.length);
+        console.log(group);
+        console.log(axis);
+        console.log(fileName);
     }
-    postImg(fileNameTemp, imageId.length);
-    changeFileName([...fileName, fileNameTemp].sort((a, b) => {
-        if (a.name < b.name) {
-            return -1;
-        }
-        if (a.name > b.name) {
-            return 1;
-        }
 
-        // names must be equal
-        return 0;
-    }));    //改變fileName的數值
+    function showPrevPic(groupNum) {     //按下先前編輯的圖片組
+        setShowUploadBtn(false);
+        changeShowCanvas(true);
+        changeGroup(groupNum - 1);
+        console.log(groupNum);
+        //let file = fileName[groupNum - 1][0];
 
-}
+        //console.log(URL.createObjectURL(file));
 
-function drawTiffCanvas(file) {
-    var reader = new FileReader();
+        //drawTiffCanvas(file);
+    }
 
-    reader.onload = function (e) {
-        var buffer = e.target.result;
-        console.log('--------------------------------------');
-        console.log(buffer);
-        var tiff = new Tiff({ buffer: buffer });
-        var canvas = tiff.toCanvas();
-        if (canvas) {
-            //document.querySelector('#output').append(canvas);
-            const [width, height] = [canvas.width, canvas.height]
-            changeCanvasDim({ width, height });
-            var canvasTemp = canvasRef.current;
-            const context = canvasTemp.getContext('2d');
-            context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-        }
-        // The file's text will be printed here
-    };
-    reader.readAsArrayBuffer(file);
-    changeShowCanvas(true);
-}
-
-function handlePointsInfo(info) {
-    console.log(info);
-    //val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y
-    let isAlreadyFilledInfo = false;
-    infoOfPoints.map((val, index) => {
-        if (val.group === info.group && val.x == info.x && val.y == info.y) {
-            isAlreadyFilledInfo = true;
+    function delImg(groupNum) {
+        if (groupNum - 1 === 0) {
+            alert("第一組圖片為panel，無法刪除!");
             return;
         }
-    });
+        // 要刪除的東西有: imageId, axis, pointInfo
+        changeImageId(imageId.filter((val, index) => {
+            return index !== groupNum - 1;
+        }));
 
-    if (!isAlreadyFilledInfo) {
-        //該點的資訊未被輸入過
-        console.log('true');
-        changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
-        return;
-    }
-    // if (infoOfPoints.length + 1 === info.group || info.id > infoOfPoints[infoOfPoints.length - 1].id) {
-    //     //該點的資訊未被輸入過
-    //     console.log('true');
-    //     changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
-    //     return;
-    // }
-    let infoPrompt = infoOfPoints;
-    for (let i = 0; i < infoPrompt.length; i++) {
-        //該點的資訊曾被輸入過，更新該點的其他檢測物資訊
-        if (infoPrompt[i].group === info.group && infoPrompt[i].x === info.x && infoPrompt[i].y === info.y) {
-            infoPrompt[i] = { ...infoOfPoints[i], [info.name]: parseInt(info.value) };
-        }
-    }
-    changeInfoOfPoints(infoPrompt);
-    //[...infoPrompt, {...infoOfPoints[infoOfPoints.length - 1], [info.name]: info.value}]
-    console.log({ ...infoOfPoints[infoOfPoints.length - 1], [info.name]: info.value });
-    console.log(infoOfPoints);
-}
+        changeImageId(imageId.filter((val, index) => {
+            return index !== groupNum - 1;
+        }));
 
-const postModelAndPutInfo = async () => {
-    //imageId.length
-    console.log(totalGroup);
-    let infoList = [];
-    let notFillAllInfo = false;
-
-    if (modelName.length < 1) notFillAllInfo = true;
-
-    for (let i = 0; i < axis.length; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
-        let infoPrompt = new Map();
-        infoPrompt = infoOfPoints[i];
-        let sizeOfMap = 0;
-        for (let k in infoPrompt) {
-            sizeOfMap++;
-        }
-        console.log(sizeOfMap);
-        if (sizeOfMap !== 8) {
-            notFillAllInfo = true;
-            console.log(infoPrompt);
-            console.log('not fill all info');
-            break;
-        }
-        infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，infoPrompt從1開始
-        delete infoPrompt.id;
-        delete infoPrompt.group;
-        console.log(infoPrompt);
-        infoList.push(infoPrompt);
-        //axios.put(`/api/images/${imageId}/`, {points: infoPrompt});
-    }
-    if (notFillAllInfo) {
-        alert("請確認 名稱 和 各點的資訊 是否為空?")
-        return;
-    }
-    console.log(infoList);
-    console.log({ name: modelName, points: infoList });
-    try {
-        //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
-        let id_for_build = 0;
-        if (id != null) {
-            const res_point = await axios.put(`/api/models/${id}/`, { name: modelName, points: infoList });
-            id_for_build = id;
-            console.log(res_point.data);
-        } else {
-            const res = await axios.post("/api/models/", { name: modelName, points: infoList })
-            console.log(res.data.id);
-            id_for_build = res.data.id;
-            //const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName,  });
-            //console.log(res_point.data);
-        }
-
-        //下面為build的部分，晚點用
-        //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
-        fetch(`http://127.0.0.1:8000/api/models/${id_for_build}/build/`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+        let axisTemp = axis.filter((val, index) => {
+            return val.group !== groupNum - 1;
+        });
+        for (let i = 0; i < axisTemp.length; i++) {
+            if (axisTemp[i].group > groupNum - 1) {
+                axisTemp[i].group = axisTemp[i].group - 1;
             }
-        ).then((response => response.body))
-            .then(rs => {
-                const reader = rs.getReader();
-                return new ReadableStream({
-                    async start(controller) {
-                        changeIsShowStream(true);
-                        let streamTotalStr = [];
-                        while (true) {
-                            const { done, value } = await reader.read();
+        }
+        changeAxis(axisTemp);
 
-                            // When no more data needs to be consumed, break the reading
-                            if (done) {
-                                changeIsShowStream(false);
-                                window.location.href = "/"
-                                break;
-                            }
-                            var enc = new TextDecoder("utf-8");
-                            const stringTxt = enc.decode(value).replace("<br>", "");
-                            console.log(stringTxt);
-                            document.getElementById("popUp").innerHTML += "<p>" + stringTxt + "</p>";
-                            //streamTotalStr.push(stringTxt);
-                            // console.log(streamTotalStr);
-                            // changeStreamTxt(streamTotalStr);
+        let infoOfPointsTemp = infoOfPoints.filter((val, index) => {
+            return val.group !== groupNum - 1;
+        });
+        for (let i = 0; i < infoOfPointsTemp.length; i++) {
+            if (infoOfPointsTemp[i].group > groupNum - 1) {
+                infoOfPointsTemp[i].group = infoOfPointsTemp[i].group - 1;
+            }
+        }
+        changeInfoOfPoints(infoOfPointsTemp);
 
-                            // Enqueue the next data chunk into our target stream
-                            controller.enqueue(value);
-                        }
 
-                        // Close the stream
-                        //history.push({ pathname: '/', state: res.data.id });
-                        controller.close();
-                        reader.releaseLock();
-                    }
-                })
-            })
-        //console.log(res_substance);
-    } catch (e) {
-        console.log(e)
+        changeFileName(fileName.filter((val, index) => {
+            return index !== groupNum - 1;
+        }))
+
+        changeGroup(group - 1);
+        changeTotalGroup(totalGroup - 1);
+        console.log(imageId[groupNum - 1]);
     }
-}
 
-return <div>
-    <NavigatorBar id={1} linkTo="/" />
-    <h1 className="big-title">填寫水質檢測數據</h1>
-    {/* 輸入model名稱 */}
-    <form className="model-name-form" >
-        <label>名稱: </label>
-        <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName} />
-        {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
-    </form>
+    function uploadFile(event) {
+        if (event.target.files.length !== 5) {
+            alert('請上傳五張圖片');
+            return;
+        }
+        let fileNameTemp = [];   //先將fileName內的都清空
+        for (let i = 0; i < event.target.files.length; i++) {     //將所接收到的所有名稱
+            let file = event.target.files[i];
+            console.log(window.URL.createObjectURL(file));
+            console.log(file.name);
+            fileNameTemp.push(event.target.files[i]);
+            // if (i === 0) {
+            //     drawTiffCanvas(file);
+            // }
+        }
+        postImg(fileNameTemp, imageId.length);
+        changeFileName([...fileName, fileNameTemp].sort((a, b) => {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
 
-    {/* {imageId.map((val, index) => index >= 0 ?
+            // names must be equal
+            return 0;
+        }));    //改變fileName的數值
+
+    }
+
+    function drawTiffCanvas(file) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            var buffer = e.target.result;
+            console.log('--------------------------------------');
+            console.log(buffer);
+            var tiff = new Tiff({ buffer: buffer });
+            var canvas = tiff.toCanvas();
+            if (canvas) {
+                //document.querySelector('#output').append(canvas);
+                const [width, height] = [canvas.width, canvas.height]
+                changeCanvasDim({ width, height });
+                var canvasTemp = canvasRef.current;
+                const context = canvasTemp.getContext('2d');
+                context.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+            }
+            // The file's text will be printed here
+        };
+        reader.readAsArrayBuffer(file);
+        changeShowCanvas(true);
+    }
+
+    function handlePointsInfo(info) {
+        console.log(info);
+        //val.group === spotInfo.group && val.x == spotInfo.x && val.y == spotInfo.y
+        let isAlreadyFilledInfo = false;
+        infoOfPoints.map((val, index) => {
+            if (val.group === info.group && val.x == info.x && val.y == info.y) {
+                isAlreadyFilledInfo = true;
+                return;
+            }
+        });
+
+        if (!isAlreadyFilledInfo) {
+            //該點的資訊未被輸入過
+            console.log('true');
+            changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
+            return;
+        }
+        // if (infoOfPoints.length + 1 === info.group || info.id > infoOfPoints[infoOfPoints.length - 1].id) {
+        //     //該點的資訊未被輸入過
+        //     console.log('true');
+        //     changeInfoOfPoints([...infoOfPoints, { id: info.id, group: info.group, x: info.x, y: info.y, [info.name]: parseInt(info.value) }]);
+        //     return;
+        // }
+        let infoPrompt = infoOfPoints;
+        for (let i = 0; i < infoPrompt.length; i++) {
+            //該點的資訊曾被輸入過，更新該點的其他檢測物資訊
+            if (infoPrompt[i].group === info.group && infoPrompt[i].x === info.x && infoPrompt[i].y === info.y) {
+                infoPrompt[i] = { ...infoOfPoints[i], [info.name]: parseInt(info.value) };
+            }
+        }
+        changeInfoOfPoints(infoPrompt);
+        //[...infoPrompt, {...infoOfPoints[infoOfPoints.length - 1], [info.name]: info.value}]
+        console.log({ ...infoOfPoints[infoOfPoints.length - 1], [info.name]: info.value });
+        console.log(infoOfPoints);
+    }
+
+    const postModelAndPutInfo = async () => {
+        //imageId.length
+        console.log(totalGroup);
+        let infoList = [];
+        let notFillAllInfo = false;
+
+        if (modelName.length < 1) notFillAllInfo = true;
+
+        for (let i = 0; i < axis.length; i++) {    //因為axis中有一項是null，所以 axis.length-1 才是真正點的數量
+            let infoPrompt = new Map();
+            infoPrompt = infoOfPoints[i];
+            let sizeOfMap = 0;
+            for (let k in infoPrompt) {
+                sizeOfMap++;
+            }
+            console.log(sizeOfMap);
+            if (sizeOfMap !== 8) {
+                notFillAllInfo = true;
+                console.log(infoPrompt);
+                console.log('not fill all info');
+                break;
+            }
+            infoPrompt['image'] = imageId[infoPrompt.group];   //因為第一組圖片為不須標點，infoPrompt從1開始
+            delete infoPrompt.id;
+            delete infoPrompt.group;
+            console.log(infoPrompt);
+            infoList.push(infoPrompt);
+            //axios.put(`/api/images/${imageId}/`, {points: infoPrompt});
+        }
+        if (notFillAllInfo) {
+            alert("請確認 名稱 和 各點的資訊 是否為空?")
+            return;
+        }
+        console.log(infoList);
+        console.log({ name: modelName, points: infoList });
+        try {
+            //const res = await axios.put(`/api/models/${modelId}/`, { name: modelName, points: infoList });
+            let id_for_build = 0;
+            if (id != null) {
+                const res_point = await axios.put(`/api/models/${id}/`, { name: modelName, points: infoList });
+                id_for_build = id;
+                console.log(res_point.data);
+            } else {
+                const res = await axios.post("/api/models/", { name: modelName, points: infoList })
+                console.log(res.data.id);
+                id_for_build = res.data.id;
+                //const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName,  });
+                //console.log(res_point.data);
+            }
+
+            //下面為build的部分，晚點用
+            //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
+            fetch(`http://127.0.0.1:8000/api/models/${id_for_build}/build/`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            ).then((response => response.body))
+                .then(rs => {
+                    const reader = rs.getReader();
+                    return new ReadableStream({
+                        async start(controller) {
+                            changeIsShowStream(true);
+                            let streamTotalStr = [];
+                            while (true) {
+                                const { done, value } = await reader.read();
+
+                                // When no more data needs to be consumed, break the reading
+                                if (done) {
+                                    changeIsShowStream(false);
+                                    window.location.href = "/"
+                                    break;
+                                }
+                                var enc = new TextDecoder("utf-8");
+                                const stringTxt = enc.decode(value).replace("<br>", "");
+                                console.log(stringTxt);
+                                document.getElementById("popUp").innerHTML += "<p>" + stringTxt + "</p>";
+                                //streamTotalStr.push(stringTxt);
+                                // console.log(streamTotalStr);
+                                // changeStreamTxt(streamTotalStr);
+
+                                // Enqueue the next data chunk into our target stream
+                                controller.enqueue(value);
+                            }
+
+                            // Close the stream
+                            //history.push({ pathname: '/', state: res.data.id });
+                            controller.close();
+                            reader.releaseLock();
+                        }
+                    })
+                })
+            //console.log(res_substance);
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    return <div>
+        <NavigatorBar id={1} linkTo="/" />
+        <h1 className="big-title">填寫水質檢測數據</h1>
+        {/* 輸入model名稱 */}
+        <form className="model-name-form" >
+            <label>名稱: </label>
+            <input type="text" name="name" id="model-name" value={modelName} onChange={handleModelName} />
+            {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
+        </form>
+
+        {/* {imageId.map((val, index) => index >= 0 ?
             <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
             null)} */}
-    {/* Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 */}
-    {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
-    {/* <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
+        {/* Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 */}
+        {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
+        {/* <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
         <form id="upload-img-container" > 
             <input id="upload-img" type="file" onChange={uploadFile} multiple disabled={isUploadingImg ? true : false} />
         </form> */}
-    <div className='upload-img-form-container'>
-        <h5 className='upload-img-form-label'>上傳panel: (panel只可上傳一次)</h5>
-        <form>
-            <label style={{ marginRight: "10px", marginTop: "20px" }}>選擇已上傳的panel:</label>
-            <select value={panelId} disabled={imageId.length > 0 ? true : false}
-                onChange={(e) => { chPanelId(e.target.value); console.log(e.target.value) }}>
-                {allPanel != null ? allPanel.map((val, index) => {
-                    if (val.id === panelId) {
+        <div className='upload-img-form-container'>
+            <h5 className='upload-img-form-label'>上傳panel: (panel只可上傳一次)</h5>
+            <form>
+                <label style={{ marginRight: "10px", marginTop: "20px" }}>選擇已上傳的panel:</label>
+                <select value={panelId} disabled={imageId.length > 0 ? true : false}
+                    onChange={(e) => { chPanelId(e.target.value); console.log(e.target.value) }}>
+                    {allPanel != null ? allPanel.map((val, index) => {
+                        if (val.id === panelId) {
+                            return <option key={val.id} value={val.id}>{val.id}</option>
+                        }
                         return <option key={val.id} value={val.id}>{val.id}</option>
-                    }
-                    return <option key={val.id} value={val.id}>{val.id}</option>
-                })
-                    : null}
-            </select>
-            <button type='button' className='normal-button' onClick={selectPanel}
-                disabled={imageId.length > 0 ? true : false}>
-                確認
-            </button>
+                    })
+                        : null}
+                </select>
+                <button type='button' className='normal-button' onClick={selectPanel}
+                    disabled={imageId.length > 0 ? true : false}>
+                    確認
+                </button>
+                <br />
+                <p>or</p>
+
+                <label>panel名稱: </label>
+                <br />
+                <input type="text" name="name" id="panel-name" value={panelName} onChange={handlePanelName}
+                    disabled={imageId.length > 0 ? true : false} />
+            </form>
             <br />
-            <p>or</p>
+            <form id="upload-img-container">   {/* */}
+                {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
+                {/* <p>{fileName.toString()}</p> */}
+                <input id="upload-img" type="file" onChange={uploadFile} multiple
+                    disabled={imageId.length > 0 ? true : false} />
+                {/* ref用來讓button操作input時有依據 */}
+            </form>
+        </div>
+        <hr />
 
-            <label>panel名稱: </label>
-            <br />
-            <input type="text" name="name" id="panel-name" value={panelName} onChange={handlePanelName}
-                disabled={imageId.length > 0 ? true : false} />
-        </form>
-        <br />
-        <form id="upload-img-container">   {/* */}
-            {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
-            {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={uploadFile} multiple
-                disabled={imageId.length > 0 ? true : false} />
-            {/* ref用來讓button操作input時有依據 */}
-        </form>
-    </div>
-    <hr />
+        <div className='upload-img-form-container'>
+            <h5 className='upload-img-form-label'>上傳images: </h5>
 
-    <div className='upload-img-form-container'>
-        <h5 className='upload-img-form-label'>上傳images: </h5>
+            {imageId.map((val, index) => index > 0 ?
+                <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
+                null)}
+            <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
 
-        {imageId.map((val, index) => index > 0 ?
-            <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
-            null)}
-        <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
+            <form id="upload-img-container">   {/* */}
+                {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
+                {/* <p>{fileName.toString()}</p> */}
+                <input id="upload-img" type="file" onChange={uploadFile} multiple
+                    disabled={isUploadingImg || imageId.length < 1 ? true : false} />
+                {/* ref用來讓button操作input時有依據 */}
+            </form>
+        </div>
 
-        <form id="upload-img-container">   {/* */}
-            {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
-            {/* <p>{fileName.toString()}</p> */}
-            <input id="upload-img" type="file" onChange={uploadFile} multiple
-                disabled={isUploadingImg || imageId.length < 1 ? true : false} />
-            {/* ref用來讓button操作input時有依據 */}
-        </form>
-    </div>
-
-    <p className='hint' style={{ display: showCanvas ? 'block' : "none" }}>在點上點擊右鍵即可將點刪除</p>
-    <div className="image-container">
-        <img id="imgShow" src={previewImgUrl[group]} style={{
-            objectFit: "contain", width: "100%", height: "100%",
-            display: showCanvas ? 'block' : "none"
-        }}
-            onMouseUp={group > 0 ? pointSpot : null} />
-        {axis.map((val, index) => val.group === group ?
-            (<Spot key={val.group + val.xShow + val.yShow} index={index} group={val.group}
-                axisX={val.xShow * currDim.width}
-                axisY={val.yShow * currDim.height}
-                x={val.x} y={val.y}
-                show={showCanvas} onRightClick={delSpot}
-            />)
-            : null)}
-        {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
-        <button className='button' style={{ display: showCanvas ? "block" : "none" }} onClick={switchGroup}>確認</button>
-    </div>
-    <div className="handle-table" style={{ width: "70vw" }}>
-        {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
-        <Table striped bordered hover style={{ tableLayout: "fixed", width: "100%" }}>
-            <thead>
-                <tr>
-                    <th>group</th>
-                    <th>do</th>
-                    <th>bod</th>
-                    <th>ss</th>
-                    <th>nh3n</th>
-                </tr>
-            </thead>
-            <tbody>
-                {axis.map((val, index) =>
-                    val.group !== null ?
-                        id != null ?
-                            (infoOfPoints.length > index) ?
-                                <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
-                                    value={infoOfPoints[index]} onChange={handlePointsInfo} />
+        <p className='hint' style={{ display: showCanvas ? 'block' : "none" }}>在點上點擊右鍵即可將點刪除</p>
+        <div className="image-container">
+            <img id="imgShow" src={previewImgUrl[group]} style={{
+                objectFit: "contain", width: "100%", height: "100%",
+                display: showCanvas ? 'block' : "none"
+            }}
+                onMouseUp={group > 0 ? pointSpot : null} />
+            {axis.map((val, index) => val.group === group ?
+                (<Spot key={val.group + val.xShow + val.yShow} index={index} group={val.group}
+                    axisX={val.xShow * currDim.width}
+                    axisY={val.yShow * currDim.height}
+                    x={val.x} y={val.y}
+                    show={showCanvas} onRightClick={delSpot}
+                />)
+                : null)}
+            {/* 因為圓點的半徑為5px，所以x, y需要補正5px */}
+            <button className='button' style={{ display: showCanvas ? "block" : "none" }} onClick={switchGroup}>確認</button>
+        </div>
+        <div className="handle-table" style={{ width: "70vw" }}>
+            {/* style={{ display: modelId !== 0 ? "block" : "none" }} */}
+            <Table striped bordered hover style={{ tableLayout: "fixed", width: "100%" }}>
+                <thead>
+                    <tr>
+                        <th>group</th>
+                        <th>do</th>
+                        <th>bod</th>
+                        <th>ss</th>
+                        <th>nh3n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {axis.map((val, index) =>
+                        val.group !== null ?
+                            id != null ?
+                                (infoOfPoints.length > index) ?
+                                    <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
+                                        value={infoOfPoints[index]} onChange={handlePointsInfo} />
+                                    : <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
+                                        value={[null, null, null, null]} onChange={handlePointsInfo} />
                                 : <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
                                     value={[null, null, null, null]} onChange={handlePointsInfo} />
-                            : <TableRow key={val.x + val.y} id={index} spot={{ x: val.x, y: val.y, group: val.group }}
-                                value={[null, null, null, null]} onChange={handlePointsInfo} />
-                        : null)
-                }
-            </tbody>
-        </Table>
-        <div className='center-button'>
-            <button className='upload-button' style={{
-                display:
-                    (showUploadBtn === true) ? 'inline-block' : 'none'
-            }} onClick={postModelAndPutInfo}>
-                {/* postModelAndPutInfo */}
-                上傳
-            </button>
+                            : null)
+                    }
+                </tbody>
+            </Table>
+            <div className='center-button'>
+                <button className='upload-button' style={{
+                    display:
+                        (showUploadBtn === true) ? 'inline-block' : 'none'
+                }} onClick={postModelAndPutInfo}>
+                    {/* postModelAndPutInfo */}
+                    上傳
+                </button>
+            </div>
+        </div>
+        {/* <StreamMesPopUp show={isShowStream} message={streamTxt}  singleMsg={streamTxt[streamTxt.length-1]} /> */}
+        <div className="popUp-background" style={{ display: isShowStream ? "block" : "none" }}>
+            <div className="popUp" id="popUp" style={{ textAlign: "start", overflowY: "scroll" }}></div>
         </div>
     </div>
-    {/* <StreamMesPopUp show={isShowStream} message={streamTxt}  singleMsg={streamTxt[streamTxt.length-1]} /> */}
-    <div className="popUp-background" style={{ display: isShowStream ? "block" : "none" }}>
-        <div className="popUp" id="popUp" style={{ textAlign: "start", overflowY: "scroll" }}></div>
-    </div>
-</div>
 }
 
 export default NewModule;
