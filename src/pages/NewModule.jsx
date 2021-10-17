@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-import NavigatorBar from "../components/NavigatorBar";
 import Spot from "../components/Spot";
 import PrevPic from "../components/prev-pic";
 import TableRow from "../components/TableRow";
@@ -712,7 +711,6 @@ function NewModule(props) {
   });
   return (
     <div>
-      <NavigatorBar id={1} linkTo="/" />
       <h1 className="big-title">填寫水質檢測數據</h1>
       {/* 輸入model名稱 */}
       <form className="model-name-form">
