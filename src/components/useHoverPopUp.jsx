@@ -5,13 +5,13 @@ function useHoverPopUp(id, getValue) {
   const [display, setDisplay] = useState(false);
   const [position, setPosition] = useState([0, 0]);
 
-  function update(e, imageKey) {
+  function update(e) {
     const x = e.nativeEvent.offsetX;
     const y = e.nativeEvent.offsetY;
     setDisplay(true);
     setPosition([x, y]);
 
-    const value = getValue(e, imageKey);
+    const value = getValue(e);
     setValue(value);
   }
 

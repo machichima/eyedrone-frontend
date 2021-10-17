@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import "../popUp.css";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import EditIcon from "@material-ui/icons/Edit";
-import Predict from "./Predict";
+import ResultDetail from "./ResultDetail";
 
 function useOutsideAlerter(ref, props) {
   useEffect(() => {
@@ -60,7 +60,7 @@ function PredictInfoPopUp(props) {
     });
   }
 
-  const imageList = props.results.map(Predict);
+  const imageList = props.results.map(ResultDetail);
   console.log(imageList);
 
   return (

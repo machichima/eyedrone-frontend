@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "react-query";
+import axios from "./axios";
 
 import useHoverPopUp from "./useHoverPopUp";
 
-function PredictImage({ predictId, imageKey, url, getValue }) {
-  const id = `${predictId}-${imageKey}`;
-  const { HoverPopUp, update, hide } = useHoverPopUp(
-    `valtooltip-${id}`,
-    getValue
+function ResultImage({ resultId, imageKey, url, getValue }) {
+  const id = `${resultId}-${imageKey}`;
+  const { HoverPopUp, update, hide } = useHoverPopUp(`valtooltip-${id}`, (e) =>
+    getValue(e, imageKey)
   );
 
   return (
@@ -23,7 +24,7 @@ function PredictImage({ predictId, imageKey, url, getValue }) {
             height: "100%",
           }}
           src={url}
-          onMouseMove={(e) => update(e, imageKey)}
+          onMouseMove={(e) => update(e)}
           onMouseLeave={hide}
         ></img>
         <HoverPopUp />
@@ -32,17 +33,26 @@ function PredictImage({ predictId, imageKey, url, getValue }) {
   );
 }
 
-function Predict(predictData, predictId) {
-  const [productJSON, chProductJSON] = useState(null);
+function ResultDetail({ result, resultId }) {
+  const {
+    data: productJSON,
+    isLoading,
+    isError,
+    error,
+  } = useQuery(["predict-result-product", result.product], async () => {
+    const res = await axios.get(result.product);
+    return res.data;
+  });
 
-  useEffect(() => {
-    const url = predictData.product;
-    var Httpreq = new XMLHttpRequest(); // a new request
-    Httpreq.open("GET", url, false);
-    Httpreq.send(null);
-    chProductJSON(JSON.parse(Httpreq.response));
-  }, []);
+  if (isLoading) {
+    return <p>正在載入預測...</p>;
+  }
+  if (isError) {
+    console.log(error);
+    return <p>發生錯誤</p>;
+  }
 
+  console.log(productJSON);
   function getProductValue(e, imageKey) {
     let currentW = document.querySelector(".predict-val-img").offsetWidth; //canvas外的container的width
     let currentH = document.querySelector(".predict-val-img").offsetHeight; //canvas外的container的height
@@ -68,15 +78,14 @@ function Predict(predictData, predictId) {
     }
   }
 
-  const imageList = Object.entries(predictData)
+  const imageList = Object.entries(result)
     .filter(([key, value]) => {
       return key !== "image" && key !== "product" && value;
     })
     .map(([key, value]) => {
-      console.log("Map: ", key, value);
       return (
-        <PredictImage
-          predictId={predictId}
+        <ResultImage
+          resultId={resultId}
           imageKey={key}
           url={value}
           getValue={getProductValue}
@@ -85,11 +94,11 @@ function Predict(predictData, predictId) {
     });
 
   return (
-    <div key={predictId}>
-      <h4 style={{ marginLeft: "0px" }}>{predictData.image}</h4>
+    <div key={resultId}>
+      <h4 style={{ marginLeft: "0px" }}>{result.image}</h4>
       {imageList}
     </div>
   );
 }
 
-export default Predict;
+export default ResultDetail;
