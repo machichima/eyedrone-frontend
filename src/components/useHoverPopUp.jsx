@@ -27,11 +27,7 @@ function useHoverPopUp(id, getValue) {
         <span
           className="valtooltip"
           id={id}
-          style={{
-            left,
-            top,
-            ...toolTipStyle,
-          }}
+          style={{ left, top, ...toolTipStyle }}
         >
           {value}
         </span>

@@ -43,14 +43,14 @@ function Predict(predictData, predictId) {
     chProductJSON(JSON.parse(Httpreq.response));
   }, []);
 
-  function getProductValue(e, id) {
+  function getProductValue(e, imageKey) {
     let currentW = document.querySelector(".predict-val-img").offsetWidth; //canvas外的container的width
     let currentH = document.querySelector(".predict-val-img").offsetHeight; //canvas外的container的height
 
     try {
-      const data = productJSON[id];
-      let JSONw = data.length;
-      let JSONh = data[0].length;
+      const data = productJSON[imageKey];
+      let JSONw = data[0].length;
+      let JSONh = data.length;
       let JSONIndexW = Math.round((e.nativeEvent.offsetX / currentW) * JSONw);
       if (JSONIndexW < 0) JSONIndexW = 0;
       else if (JSONIndexW > JSONw) JSONIndexW = JSONw;
@@ -59,7 +59,9 @@ function Predict(predictData, predictId) {
       if (JSONIndexH < 0) JSONIndexH = 0;
       else if (JSONIndexH > JSONh) JSONIndexH = JSONh;
 
-      return `${Math.round(data[JSONIndexW][JSONIndexH] * 100) / 100}`;
+      const result = data[JSONIndexH][JSONIndexW];
+
+      return result === 0 ? `NaN` : `${Math.round(result * 100) / 100}`;
     } catch (err) {
       console.log(err);
       return "Something bad happened";
