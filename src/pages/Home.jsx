@@ -1,22 +1,12 @@
 import React, { useState } from "react";
-import { Link, useHistory } from "react-router-dom";
-import Cards from "../components/Cards";
+import { useHistory } from "react-router-dom";
 import axios from "../components/axios";
 import ModuleInfoPopUp from "../components/moduleInfoPopUp";
 import PredictInfoPopUp from "../components/predictInfoPopUp";
+import ModelList from "../components/ModelList";
+import PredictList from "../components/PredictList";
 
-function AllModuleAndPredict(props) {
-  const card_container = {
-    width: "70vw",
-    margin: "0 auto",
-    display: "grid",
-    gridGap: "20px",
-    gridTemplateColumns: "1fr 1fr 1fr 1fr",
-    justifyContent: "space-between",
-    alignItems: "center",
-  };
-
-  const name = "123";
+function Home(props) {
   const modelNum = 0;
   const predictNum = 0;
   console.log(Math.pow(2, modelNum));
@@ -70,48 +60,9 @@ function AllModuleAndPredict(props) {
   return (
     <div>
       <div>
-        <h1 className="big-title">所有模型</h1>
-        <div className="center-button">
-          <Link className="new-model-button" to="/models/new">
-            新增模型
-          </Link>
-        </div>
-        <div style={card_container}>
-          {modelData != null
-            ? modelData.map((val, index) => (
-                <Cards
-                  key={2 * index}
-                  index={index}
-                  id={val.id}
-                  name={val.name}
-                  onClick={getClickedCard}
-                />
-              ))
-            : null}
-        </div>
+        <ModelList />
         <hr />
-        <h1 className="big-title">所有預測</h1>
-        <div className="center-button">
-          {/* <Link to={"/newPredict"} style={{ textDecoration: 'none' }}> */}
-
-          <Link className="new-model-button" to="/predicts/new">
-            新增預測
-          </Link>
-          {/* </Link> */}
-        </div>
-        <div style={card_container}>
-          {predictData != null
-            ? predictData.map((val, index) => (
-                <Cards
-                  key={2 * index + 1}
-                  index={index}
-                  id={val.id}
-                  dateTime={val.created_at}
-                  onClick={getPredictClickedCard}
-                />
-              ))
-            : null}
-        </div>
+        <PredictList />
       </div>
       {cliModelCardIndex != null ? (
         <ModuleInfoPopUp
@@ -134,4 +85,4 @@ function AllModuleAndPredict(props) {
   );
 }
 
-export default AllModuleAndPredict;
+export default Home;
