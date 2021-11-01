@@ -18,11 +18,6 @@ function ResultImage({ resultId, imageKey, url, getValue }) {
           alt={id}
           id={id}
           className="predict-val-img"
-          style={{
-            objectFit: "contain",
-            width: "100%",
-            height: "100%",
-          }}
           src={url}
           onMouseMove={(e) => update(e)}
           onMouseLeave={hide}

@@ -15,13 +15,15 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <NavigatorBar />
-        <Switch>
-          <Route exact path="/" component={Home} />
-          <Route path="/predicts/new" component={NewPredict} />
-          <Route path="/predicts/:id" component={PredictDetail} />
-          <Route path="/models/new" component={NewModule} />
-          <Route path="/models/:id-:name" component={ModelDetail} />
-        </Switch>
+        <div class="main">
+          <Switch>
+            <Route exact path="/" component={Home} />
+            <Route path="/predicts/new" component={NewPredict} />
+            <Route path="/predicts/:id" component={PredictDetail} />
+            <Route path="/models/new" component={NewModule} />
+            <Route path="/models/:id-:name" component={ModelDetail} />
+          </Switch>
+        </div>
       </BrowserRouter>
     </QueryClientProvider>
   );
