@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import useModelSelector from "../components/useModelSelector";
+import usePanelSelector from "../components/usePanelSelector";
 
 function NewPredict() {
   const [predictDateTime, setPredictDateTime] = useState("");
   const { modelId, ModelSelector } = useModelSelector();
-  console.log(modelId);
+  const { panelId, PanelSelector } = usePanelSelector();
+  console.log(modelId, panelId);
   return (
     <div>
       <h1 className="big-title">填寫預測數據</h1>
@@ -18,8 +20,8 @@ function NewPredict() {
           onChange={(e) => setPredictDateTime(e.target.value)}
           required
         ></input>
-        <label style={{ marginLeft: "10px" }}>選擇模型: </label>
         <ModelSelector />
+        <PanelSelector />
       </form>
     </div>
   );

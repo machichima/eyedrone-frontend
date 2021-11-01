@@ -3,7 +3,7 @@ import { useQuery } from "react-query";
 import { getModelList } from "../api/model";
 
 function useModelSelector() {
-  const [modelId, setModelId] = useState(1);
+  const [modelId, setModelId] = useState(0);
   function ModelSelector() {
     const {
       data: models,
@@ -24,9 +24,16 @@ function useModelSelector() {
       </option>
     ));
     return (
-      <select value={modelId} onChange={(e) => setModelId(e.target.value)}>
-        {options}
-      </select>
+      <div>
+        <label style={{ marginLeft: "10px" }}>選擇模型：</label>
+        <select
+          value={modelId}
+          onChange={(e) => setModelId(Number(e.target.value))}
+        >
+          <option value={0}>--</option>
+          {options}
+        </select>
+      </div>
     );
   }
   return {
