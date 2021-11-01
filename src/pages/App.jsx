@@ -15,7 +15,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <NavigatorBar />
-        <div class="main">
+        <div className="main">
           <Switch>
             <Route exact path="/" component={Home} />
             <Route path="/predicts/new" component={NewPredict} />

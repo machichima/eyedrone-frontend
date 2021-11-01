@@ -1,19 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "react-query";
-import axios from "./axios";
-
-async function getModels() {
-  try {
-    const res = await axios.get("/api/models/");
-    return res.data;
-  } catch (err) {
-    throw err;
-  }
-}
+import { getModelList } from "../api/model";
 
 function ModelList() {
-  const { data, isLoading, isError, error } = useQuery("model-list", getModels);
+  const { data, isLoading, isError, error } = useQuery(
+    "model-list",
+    getModelList
+  );
   if (isLoading) {
     return <p>正在載入模型列表...</p>;
   }
