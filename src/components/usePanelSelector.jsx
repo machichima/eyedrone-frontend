@@ -1,37 +1,31 @@
 import React, { useState } from "react";
 import { useMutation, useQuery } from "react-query";
 import { getPanelList } from "../api/panel";
+import { uploadPanelOrImage } from "../api/image";
 
 function usePanelSelector() {
   const [panelId, setPanelId] = useState(0);
+  const [uploaded, setUploaded] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const {
     data: panels,
     isLoading,
     isError,
     error,
-  } = useQuery("panel-list", getPanelList);
+  } = useQuery(["panel-list", uploaded], getPanelList);
 
-  const mutation = useMutation((files) => {
-    console.log("selected files");
-    if (files.length !== 5) {
-      alert("請上傳 5 張圖片");
-      return;
+  const mutation = useMutation(
+    async (files) => {
+      return await uploadPanelOrImage("/api/panels/", files);
+    },
+    {
+      onSuccess: (panel) => {
+        console.log(panel);
+        setPanelId(panel.id);
+        setUploaded(true);
+      },
     }
-    const name = files[0].name.split("_")[1];
-    console.log(name);
-    const fileNames = [];
-    for (let i = 0; i < 5; i++) {
-      fileNames.push(window.URL.createObjectURL(files.item(i)));
-    }
-    console.log(fileNames);
-    const payload = new FormData();
-    payload.append("blue", fileNames[0]);
-    payload.append("green", fileNames[1]);
-    payload.append("red", fileNames[2]);
-    payload.append("nir", fileNames[3]);
-    payload.append("red_edge", fileNames[4]);
-  });
+  );
 
   function PanelSelector() {
     if (isLoading) {
@@ -67,7 +61,11 @@ function usePanelSelector() {
             mutation.mutate(e.target.files);
           }}
           multiple
+          disabled={panelId}
         />
+        {mutation.isLoading ? "上傳中" : null}
+        {mutation.isError ? "錯誤" : null}
+        {mutation.isSuccess ? "成功上傳" : null}
         <button disabled={!panelId || confirm} onClick={() => setConfirm(true)}>
           確定
         </button>
