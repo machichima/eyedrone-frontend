@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import useModelSelector from "../components/useModelSelector";
 import usePanelSelector from "../components/usePanelSelector";
+import useImageSelector from "../components/useImageSelector";
 
 function NewPredict() {
   const [predictDateTime, setPredictDateTime] = useState("");
   const { modelId, ModelSelector } = useModelSelector();
   const { panelId, PanelSelector } = usePanelSelector();
-  console.log(modelId, panelId);
+  const { image, ImageSelector } = useImageSelector();
   return (
     <div>
       <h1 className="big-title">填寫預測數據</h1>
@@ -21,8 +22,8 @@ function NewPredict() {
           required
         ></input>
         <ModelSelector />
-        <PanelSelector />
       </form>
+      <PanelSelector />
     </div>
   );
 }
