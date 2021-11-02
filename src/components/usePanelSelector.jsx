@@ -12,15 +12,17 @@ function usePanelSelector() {
     error,
   } = useQuery("panel-list", getPanelList);
 
-  const mutation = useMutation((e) => {
+  const mutation = useMutation((files) => {
     console.log("selected files");
-    if (e.target.files.length !== 5) {
+    if (files.length !== 5) {
       alert("請上傳 5 張圖片");
       return;
     }
+    const name = files[0].name.split("_")[1];
+    console.log(name);
     const fileNames = [];
     for (let i = 0; i < 5; i++) {
-      fileNames.push(window.URL.createObjectURL(e.target.files.item(i)));
+      fileNames.push(window.URL.createObjectURL(files.item(i)));
     }
     console.log(fileNames);
     const payload = new FormData();
@@ -32,7 +34,6 @@ function usePanelSelector() {
   });
 
   function PanelSelector() {
-    const [panelName, setPanelName] = useState("");
     if (isLoading) {
       return <p>正在載入校正圖片列表...</p>;
     }
@@ -60,18 +61,10 @@ function usePanelSelector() {
         <br />
         <label>上傳新校正圖片：</label>
         <input
-          type="text"
-          name="name"
-          value={panelName}
-          onChange={(e) => setPanelName(e.target.value)}
-          disabled={panelId}
-        />
-        <input
           id="upload-img"
           type="file"
-          onClick={(e) => (e.target.files = null)}
           onChange={(e) => {
-            mutation.mutate(e);
+            mutation.mutate(e.target.files);
           }}
           multiple
         />
