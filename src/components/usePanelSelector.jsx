@@ -6,7 +6,7 @@ import { uploadPanelOrImage } from "../api/image";
 function usePanelSelector() {
   const [panelId, setPanelId] = useState(0);
   const [uploaded, setUploaded] = useState(false);
-  const [confirm, setConfirm] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const {
     data: panels,
     isLoading,
@@ -47,7 +47,7 @@ function usePanelSelector() {
         <select
           value={panelId}
           onChange={(e) => setPanelId(Number(e.target.value))}
-          disabled={confirm}
+          disabled={isConfirmed}
         >
           <option value={0}>--</option>
           {options}
@@ -66,7 +66,10 @@ function usePanelSelector() {
         {mutation.isLoading ? "上傳中" : null}
         {mutation.isError ? "錯誤" : null}
         {mutation.isSuccess ? "成功上傳" : null}
-        <button disabled={!panelId || confirm} onClick={() => setConfirm(true)}>
+        <button
+          disabled={!panelId || isConfirmed}
+          onClick={() => setIsConfirmed(true)}
+        >
           確定
         </button>
       </div>
@@ -74,6 +77,7 @@ function usePanelSelector() {
   }
   return {
     panelId,
+    isConfirmed: isConfirmed,
     PanelSelector,
   };
 }

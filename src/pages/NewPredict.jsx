@@ -6,7 +6,7 @@ import useImageSelector from "../components/useImageSelector";
 function NewPredict() {
   const [predictDateTime, setPredictDateTime] = useState("");
   const { modelId, ModelSelector } = useModelSelector();
-  const { panelId, PanelSelector } = usePanelSelector();
+  const { panelId, isConfirmed, PanelSelector } = usePanelSelector();
   const { image, ImageSelector } = useImageSelector();
   return (
     <div>
