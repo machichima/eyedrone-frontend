@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react";
 import PrevPic from "../components/prev-pic";
 import axios from "../components/axios";
+import usePanelSelector from "../components/usePanelSelector";
+import useModelSelector from "../components/useModelSelector";
 
 function NewPredict() {
-  const [modelId, chModelId] = useState(1);
+  //const [modelId, chModelId] = useState(1);
   const [allModel, chAllModel] = useState();
   const [imageId, changeImageId] = useState([]);
   const [predictDate, setPredictDate] = useState("");
@@ -16,10 +18,13 @@ function NewPredict() {
   const [showUploadBtn, setShowUploadBtn] = useState(false);
   const [panelName, chPanelName] = useState("");
   const [allPanel, chAllPanel] = useState([]);
-  const [panelId, chPanelId] = useState(1);
+  //const [panelId, chPanelId] = useState(1);
 
   const [isUploadingImg, chIsUploadingImg] = useState(false);
   const [isUploadingPre, chIsUploadingPre] = useState(false);
+
+  const { panelId, isConfirmed, PanelSelector } = usePanelSelector();
+  const { modelId, ModelSelector } = useModelSelector();
 
   let url = new URL(window.location.href);
   let id = url.searchParams.get("id");
@@ -37,7 +42,7 @@ function NewPredict() {
       console.log("panels: ", resPanel.data);
       if (id != null) {
         const res_predictData = await axios.get("/api/predicts/" + id);
-        chModelId(res_predictData.data.model);
+        //chModelId(res_predictData.data.model);
         let allImgId = [];
         res_predictData.data.images.map((val, index) => {
           if (!allImgId.includes(val)) {
@@ -53,7 +58,7 @@ function NewPredict() {
         });
         if (panelImg !== 0) {
           allImgId = [panelImg, ...allImgId];
-          chPanelId(panelImg);
+          //chPanelId(panelImg);
         }
 
         console.log("all image id: ", allImgId);
@@ -170,6 +175,7 @@ function NewPredict() {
       //若為編輯第一組圖片，則totalGroup不為0，所以不會進入
       //postImg(0);
       changeShowCanvas(false);
+      setShowUploadBtn(true);
       changeGroup(1);
       changeTotalGroup(1);
       return;
@@ -199,9 +205,8 @@ function NewPredict() {
     let param = new FormData(); // 创建form对象
     //param.append('model', modelId);  // 通过append向form对象添加数据
     //param.append('is_panel', (groupNum === 0) ? true : false);
-    if (imageIdLen >= 1) {
-      param.append("panel", imageId[0]);
-    }
+    param.append("name", fileNameTemp[0].name.split("_")[1]);
+    param.append("panel", panelId);
     param.append("blue", fileNameTemp[0]);
     param.append("green", fileNameTemp[1]);
     param.append("red", fileNameTemp[2]);
@@ -213,38 +218,25 @@ function NewPredict() {
       },
       timeout: 60000,
     };
-    try {
-      if (imageIdLen < 1) {
-        fetch(`http://127.0.0.1:8000/api/panels/`, {
-          method: "POST",
-          body: param,
-        })
-          .then((response) => response.json())
-          .then((json) => {
-            console.log(json);
-            changeImageId([...imageId, json.id]);
-            console.log(json.preview);
-            chPreviewImgUrl([...previewImgUrl, json.preview]);
-          });
-      } else {
-        chIsUploadingImg(true);
-        setShowUploadBtn(false);
-        fetch(`http://127.0.0.1:8000/api/images/`, {
-          method: "POST",
-          body: param,
-        })
-          .then((response) => response.json())
-          .then((json) => {
-            chIsUploadingImg(false);
-            changeShowCanvas(true);
-            console.log(json);
-            changeTotalGroup(imageId.length);
-            changeGroup(imageId.length);
-            changeImageId([...imageId, json.id]);
-            console.log(json.rgb);
-            chPreviewImgUrl([...previewImgUrl, json.rgb]);
-          });
-      }
+    console.log("param: ", param);
+    try {    
+      chIsUploadingImg(true);
+      setShowUploadBtn(false);
+      fetch(`http://127.0.0.1:8000/api/images/`, {
+        method: "POST",
+        body: param,
+      })
+        .then((response) => response.json())
+        .then((json) => {
+          chIsUploadingImg(false);
+          changeShowCanvas(true);
+          console.log(json);
+          changeTotalGroup(imageId.length);
+          changeGroup(imageId.length);
+          changeImageId([...imageId, json.id]);
+          console.log(json.rgb);
+          chPreviewImgUrl([...previewImgUrl, json.rgb]);
+        });
       console.log("sent image");
     } catch (e) {
       console.log(e);
@@ -316,28 +308,6 @@ function NewPredict() {
       window.location.href = "/";
     }
 
-    // fetch(`http://127.0.0.1:8000/api/predicts/`,
-    //     {
-    //         method: 'POST',
-    //         body: JSON.stringify({
-    //             model: modelId,
-    //             created_at: predictDate + "T" + predictTime + ":00Z",
-    //             images: imageIdList
-    //         }),
-    //     }).then(response => {
-    //         chIsUploadingPre(false);
-    //         window.location.href = "/";
-    //     });
-
-    // const res = await axios.post("/api/predicts/",
-    //     {
-    //         model: modelId, created_at: predictDate + "T" + predictTime + ":00Z",
-    //         images: imageIdList
-    //     }, { timeout: 20000 });
-    // if (res) {
-    //     chIsUploadingPre(false);
-    //     window.location.href = "/";
-    // }
   }
 
   return (
@@ -362,103 +332,11 @@ function NewPredict() {
           onChange={handlePredictTime}
           required
         ></input>
-        <label style={{ marginLeft: "10px" }}>選擇模型: </label>
-        <select
-          value={modelId}
-          onChange={(e) => {
-            chModelId(e.target.value);
-            console.log(e.target.value);
-          }}
-        >
-          {allModel != null
-            ? allModel.map((val, index) => {
-                if (val.id === modelId) {
-                  return (
-                    <option key={val.id} value={val.id}>
-                      {val.name}
-                    </option>
-                  );
-                }
-                return (
-                  <option key={val.id} value={val.id}>
-                    {val.name}
-                  </option>
-                );
-              })
-            : null}
-        </select>
+        <ModelSelector />
       </form>
-
+      
       <div className="upload-img-form-container">
-        <h5 className="upload-img-form-label">
-          上傳panel: (panel只可上傳一次)
-        </h5>
-        <form>
-          <label style={{ marginRight: "10px", marginTop: "20px" }}>
-            選擇已上傳的panel:
-          </label>
-          <select
-            value={panelId}
-            disabled={imageId.length > 0 ? true : false}
-            onChange={(e) => {
-              chPanelId(e.target.value);
-              console.log(e.target.value);
-            }}
-          >
-            {allPanel != null
-              ? allPanel.map((val, index) => {
-                  if (val.id === panelId) {
-                    return (
-                      <option key={val.id} value={val.id}>
-                        {val.id}
-                      </option>
-                    );
-                  }
-                  return (
-                    <option key={val.id} value={val.id}>
-                      {val.id}
-                    </option>
-                  );
-                })
-              : null}
-          </select>
-          <button
-            type="button"
-            className="normal-button"
-            onClick={selectPanel}
-            disabled={imageId.length > 0 ? true : false}
-          >
-            確認
-          </button>
-          <br />
-          <p>or</p>
-
-          <label>panel名稱: </label>
-          <br />
-          <input
-            type="text"
-            name="name"
-            id="panel-name"
-            value={panelName}
-            onChange={handlePanelName}
-            disabled={imageId.length > 0 ? true : false}
-          />
-        </form>
-        <br />
-        <form id="upload-img-container">
-          {" "}
-          {/* */}
-          {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
-          {/* <p>{fileName.toString()}</p> */}
-          <input
-            id="upload-img"
-            type="file"
-            onChange={uploadFile}
-            multiple
-            disabled={imageId.length > 0 ? true : false}
-          />
-          {/* ref用來讓button操作input時有依據 */}
-        </form>
+        <PanelSelector /> 
       </div>
       <hr />
 
@@ -466,7 +344,7 @@ function NewPredict() {
         <h5 className="upload-img-form-label">上傳images: </h5>
 
         {imageId.map((val, index) =>
-          index > 0 ? (
+          index >= 0 ? (
             <PrevPic
               key={index}
               group={index + 1}
@@ -492,7 +370,8 @@ function NewPredict() {
             type="file"
             onChange={uploadFile}
             multiple
-            disabled={isUploadingImg || imageId.length < 1 ? true : false}
+            disabled={isUploadingImg || !isConfirmed}
+            // imageId.length < 1 ? true : false
           />
           {/* ref用來讓button操作input時有依據 */}
         </form>

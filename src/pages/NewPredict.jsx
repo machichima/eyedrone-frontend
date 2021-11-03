@@ -24,6 +24,7 @@ function NewPredict() {
         <ModelSelector />
       </form>
       <PanelSelector />
+      <ImageSelector />
     </div>
   );
 }

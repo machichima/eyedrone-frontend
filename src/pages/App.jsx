@@ -1,6 +1,7 @@
 import React from "react";
 import NewModule from "./NewModule";
 import NewPredict from "./NewPredict";
+import NewPredictOld from "./NewPredictOld";
 import Home from "./Home";
 import ModelDetail from "./ModelDetail";
 import PredictDetail from "./PredictDetail";
@@ -18,7 +19,7 @@ function App() {
         <div className="main">
           <Switch>
             <Route exact path="/" component={Home} />
-            <Route path="/predicts/new" component={NewPredict} />
+            <Route path="/predicts/new" component={NewPredictOld} />
             <Route path="/predicts/:id" component={PredictDetail} />
             <Route path="/models/new" component={NewModule} />
             <Route path="/models/:id-:name" component={ModelDetail} />

@@ -10,6 +10,7 @@ import Tiff from "tiff.js";
 import Table from "react-bootstrap/Table";
 import StreamMesPopUp from "../components/StreamMesPopUp";
 import useHoverPopUp from "../components/useHoverPopUp";
+import usePanelSelector from "../components/usePanelSelector";
 
 function NewModule(props) {
   //var fileName = [];
@@ -34,9 +35,11 @@ function NewModule(props) {
   const [showUploadBtn, setShowUploadBtn] = useState(false);
   const [panelName, chPanelName] = useState("");
   const [allPanel, chAllPanel] = useState([]);
-  const [panelId, chPanelId] = useState(1);
+  //const [panelId, chPanelId] = useState(1);
 
   const [modelDataForEdit, chModelDataForEdit] = useState(null);
+
+  const { panelId, isConfirmed, PanelSelector } = usePanelSelector();
 
   const history = useHistory();
   const pathname = window.location.pathname;
@@ -89,7 +92,7 @@ function NewModule(props) {
         });
         if (panelImg !== 0) {
           allImgId = [panelImg, ...allImgId];
-          chPanelId(panelImg);
+          //chPanelId(panelImg);
         }
 
         console.log("allImgId: ", allImgId);
@@ -226,9 +229,8 @@ function NewModule(props) {
     let param = new FormData(); // 创建form对象
     //param.append('model', modelId);  // 通过append向form对象添加数据
     //param.append('is_panel', (groupNum === 0) ? true : false);
-    if (imageIdLen >= 1) {
-      param.append("panel", imageId[0]);
-    }
+    param.append("name", fileNameTemp[0].name.split("_")[1]);
+    param.append("panel", panelId);
     param.append("blue", fileNameTemp[0]);
     param.append("green", fileNameTemp[1]);
     param.append("red", fileNameTemp[2]);
@@ -241,24 +243,6 @@ function NewModule(props) {
       timeout: 60000,
     };
     try {
-      if (imageIdLen < 1) {
-        fetch(`http://127.0.0.1:8000/api/panels/`, {
-          method: "POST",
-          body: param,
-        })
-          .then((response) => response.json())
-          .then((json) => {
-            console.log(json);
-            changeImageId([...imageId, json.id]);
-            console.log(json.preview);
-            chPreviewImgUrl([...previewImgUrl, json.preview]);
-          });
-        // const res = await axios.post("/api/panels/", param, config);
-        // console.log(res.data);
-        // changeImageId([...imageId, res.data.id]);
-        // console.log(res.data.preview);
-        // chPreviewImgUrl([...previewImgUrl, res.data.preview]);
-      } else {
         chIsUploadingImg(true);
         fetch(`http://127.0.0.1:8000/api/images/`, {
           method: "POST",
@@ -275,18 +259,6 @@ function NewModule(props) {
             console.log(json.rgb);
             chPreviewImgUrl([...previewImgUrl, json.rgb]);
           });
-        // const res = await axios.post("/api/images/", param, config);
-        // if (res.data) {
-        //     chIsUploadingImg(false);
-        //     changeShowCanvas(true);
-        // }
-        // console.log(res.data);
-        // changeGroup(imageId.length);
-        // changeTotalGroup(imageId.length);
-        // changeImageId([...imageId, res.data.id]);
-        // console.log(res.data.rgb);
-        // chPreviewImgUrl([...previewImgUrl, res.data.rgb]);
-      }
       console.log("sent image");
     } catch (e) {
       console.log(e);
@@ -369,6 +341,7 @@ function NewModule(props) {
       changeShowCanvas(false);
       changeGroup(1);
       changeTotalGroup(1);
+      setShowUploadBtn(true);
       return;
     }
 
@@ -381,10 +354,10 @@ function NewModule(props) {
       }
     });
 
-    if (group === 0) {
-      changeShowCanvas(false);
-      return;
-    }
+    // if (group === 0) {
+    //   changeShowCanvas(false);
+    //   return;
+    // }
 
     if (!isPointSpot) {
       //當使用者未新增座標點就按下確認，此時axis[axis.length - 1].group的數值會和group一樣
@@ -641,65 +614,20 @@ function NewModule(props) {
         const res_point = await axios.put(`/api/models/${id}/`, {
           name: modelName,
           points: infoList,
-        });
+        }, {timeout: 60000});
         id_for_build = id;
         console.log(res_point.data);
       } else {
         const res = await axios.post("/api/models/", {
           name: modelName,
           points: infoList,
-        });
+        }, {timeout: 60000});
         console.log(res.data.id);
         id_for_build = res.data.id;
         //const res_point = await axios.put(`/api/models/${res.data.id}/`, { name: modelName,  });
         //console.log(res_point.data);
       }
-
-      //下面為build的部分，晚點用
-      //const res_substance = await axios.post(`/api/models/${res.data.id}/build/`);
-      fetch(`http://127.0.0.1:8000/api/models/${id_for_build}/build/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.body)
-        .then((rs) => {
-          const reader = rs.getReader();
-          return new ReadableStream({
-            async start(controller) {
-              changeIsShowStream(true);
-              let streamTotalStr = [];
-              while (true) {
-                const { done, value } = await reader.read();
-
-                // When no more data needs to be consumed, break the reading
-                if (done) {
-                  changeIsShowStream(false);
-                  window.location.href = "/";
-                  break;
-                }
-                var enc = new TextDecoder("utf-8");
-                const stringTxt = enc.decode(value).replace("<br>", "");
-                console.log(stringTxt);
-                document.getElementById("popUp").innerHTML +=
-                  "<p>" + stringTxt + "</p>";
-                //streamTotalStr.push(stringTxt);
-                // console.log(streamTotalStr);
-                // changeStreamTxt(streamTotalStr);
-
-                // Enqueue the next data chunk into our target stream
-                controller.enqueue(value);
-              }
-
-              // Close the stream
-              //history.push({ pathname: '/', state: res.data.id });
-              controller.close();
-              reader.releaseLock();
-            },
-          });
-        });
-      //console.log(res_substance);
+      window.location.href = "/models/"+id_for_build+"-"+modelName;
     } catch (e) {
       console.log(e);
     }
@@ -722,88 +650,12 @@ function NewModule(props) {
           value={modelName}
           onChange={handleModelName}
         />
-        {/* <button type="button" className='button' style={{ float: "none", margin: "0px 20px" }} onClick={modelId === 0 ? postModel : () => alert('請勿重複送出名稱')}>送出</button> */}
       </form>
-
-      {/* {imageId.map((val, index) => index >= 0 ?
-            <PrevPic key={index} group={index + 1} onClick={showPrevPic} delImg={delImg} /> :
-            null)} */}
-      {/* Array.from({ length: totalGroup }, (_, i) => i + 1).map((index, val) => totalGroup > 0 */}
-      {/* ^顯示先前所選擇的圖片組，使用totalGroup，不論顯示的為哪一組，皆會顯示出所有先前選的圖片組 */}
-      {/* <p className='hint' style={{ display: isUploadingImg ? 'block' : "none" }}>圖片上傳中</p>
-        <form id="upload-img-container" > 
-            <input id="upload-img" type="file" onChange={uploadFile} multiple disabled={isUploadingImg ? true : false} />
-        </form> */}
       <div className="upload-img-form-container">
         <h5 className="upload-img-form-label">
           上傳panel: (panel只可上傳一次)
         </h5>
-        <form>
-          <label style={{ marginRight: "10px", marginTop: "20px" }}>
-            選擇已上傳的panel:
-          </label>
-          <select
-            value={panelId}
-            disabled={imageId.length > 0 ? true : false}
-            onChange={(e) => {
-              chPanelId(e.target.value);
-              console.log(e.target.value);
-            }}
-          >
-            {allPanel != null
-              ? allPanel.map((val, index) => {
-                  if (val.id === panelId) {
-                    return (
-                      <option key={val.id} value={val.id}>
-                        {val.id}
-                      </option>
-                    );
-                  }
-                  return (
-                    <option key={val.id} value={val.id}>
-                      {val.id}
-                    </option>
-                  );
-                })
-              : null}
-          </select>
-          <button
-            type="button"
-            className="normal-button"
-            onClick={selectPanel}
-            disabled={imageId.length > 0 ? true : false}
-          >
-            確認
-          </button>
-          <br />
-          <p>or</p>
-
-          <label>panel名稱: </label>
-          <br />
-          <input
-            type="text"
-            name="name"
-            id="panel-name"
-            value={panelName}
-            onChange={handlePanelName}
-            disabled={imageId.length > 0 ? true : false}
-          />
-        </form>
-        <br />
-        <form id="upload-img-container">
-          {" "}
-          {/* */}
-          {/* <button id="upload-img" onClick={handleClick}>上傳圖片</button> */}
-          {/* <p>{fileName.toString()}</p> */}
-          <input
-            id="upload-img"
-            type="file"
-            onChange={uploadFile}
-            multiple
-            disabled={imageId.length > 0 ? true : false}
-          />
-          {/* ref用來讓button操作input時有依據 */}
-        </form>
+        <PanelSelector /> 
       </div>
       <hr />
 
@@ -811,7 +663,7 @@ function NewModule(props) {
         <h5 className="upload-img-form-label">上傳images: </h5>
 
         {imageId.map((val, index) =>
-          index > 0 ? (
+          index >= 0 ? (
             <PrevPic
               key={index}
               group={index + 1}
@@ -837,7 +689,8 @@ function NewModule(props) {
             type="file"
             onChange={uploadFile}
             multiple
-            disabled={isUploadingImg || imageId.length < 1 ? true : false}
+            disabled={isUploadingImg || !isConfirmed}
+            //imageId.length < 1 ? true : false
           />
           {/* ref用來讓button操作input時有依據 */}
         </form>
@@ -856,7 +709,7 @@ function NewModule(props) {
             height: "100%",
             display: showCanvas ? "block" : "none",
           }}
-          onMouseUp={group > 0 ? pointSpot : null}
+          onMouseUp={group >= 0 ? pointSpot : null}
           onMouseMove={update}
           onMouseLeave={hide}
         />

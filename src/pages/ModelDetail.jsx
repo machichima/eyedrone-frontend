@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import axios from "../components/axios";
@@ -15,6 +15,8 @@ function ModelDetail() {
     ["model-detail", id],
     () => getModelDetail(id)
   );
+  const [isShowStream, changeIsShowStream] = useState(false);
+
   if (isLoading) {
     return <p>正在載入模型...</p>;
   }
@@ -71,11 +73,77 @@ function ModelDetail() {
       </Table>
     </div>
   );
+
+  const predictions_btn = (
+    <button onClick={post_prdictions}>predictions</button>
+  )
+  
+  async function post_prdictions(){
+    console.log(id);
+    const res = await axios.post("/api/models/"+id+"/predictions/", {},{timeout: 60000});
+    window.location.reload();
+  }
+
+  const build_model_btn = (
+    <button onClick={build_model}>build</button>
+  )
+
+  async function build_model() {
+    fetch(`http://127.0.0.1:8000/api/models/${id}/build/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.body)
+      .then((rs) => {
+        const reader = rs.getReader();
+        return new ReadableStream({
+          async start(controller) {
+            changeIsShowStream(true);
+            let streamTotalStr = [];
+            while (true) {
+              const { done, value } = await reader.read();
+
+              // When no more data needs to be consumed, break the reading
+              if (done) {
+                changeIsShowStream(false);
+                window.location.reload();
+                break;
+              }
+              var enc = new TextDecoder("utf-8");
+              const stringTxt = enc.decode(value).replace("<br>", "");
+              console.log(stringTxt);
+              document.getElementById("streaming").innerHTML +=
+                "<p>" + stringTxt + "</p>";
+              //streamTotalStr.push(stringTxt);
+              // console.log(streamTotalStr);
+              // changeStreamTxt(streamTotalStr);
+
+              // Enqueue the next data chunk into our target stream
+              controller.enqueue(value);
+            }
+
+            // Close the stream
+            //history.push({ pathname: '/', state: res.data.id });
+            controller.close();
+            reader.releaseLock();
+          },
+        });
+      });
+  }
+
+      
+
+
   return (
     <div>
       <h1>{data.name}</h1>
       <div>{substanceList}</div>
       <div>{predictionTable}</div>
+      <div>{predictions_btn}</div>
+      <div>{build_model_btn}</div>
+      <div id="streaming" style={{'display': isShowStream ? 'block' : 'none'}}></div>
     </div>
   );
 }
